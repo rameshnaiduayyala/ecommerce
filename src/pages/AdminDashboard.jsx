@@ -155,6 +155,75 @@ const AdminDashboard = () => {
     }
   };
 
+  const exportOrdersToCSV = () => {
+    if (orders.length === 0) {
+      alert("No orders available to export.");
+      return;
+    }
+
+    const headers = [
+      "Order ID",
+      "Date",
+      "Customer Name",
+      "Customer Email",
+      "Shipping Address",
+      "City",
+      "Postal Code",
+      "Country",
+      "Ordered Items (QTY)",
+      "Total Amount (INR)",
+      "Status",
+      "Dispatch Note"
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...orders.map(order => {
+        const addr = order.shipping_address || {};
+        const custName = addr.firstName ? `${addr.firstName} ${addr.lastName}` : 'Guest Checkout';
+        const userEmail = order.users?.email || 'N/A';
+        const fullAddr = `"${(addr.address || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        const city = `"${(addr.city || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        const postalCode = addr.postalCode || '';
+        const country = addr.country || 'India';
+        
+        const itemsFlattened = (order.order_items || [])
+          .map(item => `${item.products?.name || 'Item'} (${item.quantity})`)
+          .join(" | ");
+        const itemsCSV = `"${itemsFlattened.replace(/"/g, '""')}"`;
+        const status = order.status || 'pending';
+        const adminNote = `"${(order.admin_note || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        const total = order.total_amount || 0;
+        const date = new Date(order.created_at).toLocaleString().replace(/,/g, '');
+
+        return [
+          order.id,
+          date,
+          `"${custName.replace(/"/g, '""')}"`,
+          `"${userEmail.replace(/"/g, '""')}"`,
+          fullAddr,
+          city,
+          postalCode,
+          country,
+          itemsCSV,
+          total,
+          status,
+          adminNote
+        ].join(",");
+      })
+    ];
+
+    const csvContent = "\uFEFF" + csvRows.join("\r\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `aha_konaseema_orders_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleProductChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData({ ...formData, [e.target.name]: value });
@@ -550,13 +619,21 @@ const AdminDashboard = () => {
 
       {activeTab === 'orders' && (
         <div className="glassmorphism p-6 rounded-3xl overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
               <h2 className="text-2xl font-bold">Fulfillment Control</h2>
               <p className="text-xs text-muted-foreground mt-0.5 font-medium">Manage, inspect, seal, and dispatch fresh Godavari confections.</p>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Total Sales Volume: <span className="text-primary font-black">₹{orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total_amount : 0), 0)}</span>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div>
+                Total Sales Volume: <span className="text-primary font-black">₹{orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total_amount : 0), 0)}</span>
+              </div>
+              <button 
+                onClick={exportOrdersToCSV}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,255,255,0.03)]"
+              >
+                📤 Export Orders CSV
+              </button>
             </div>
           </div>
           
