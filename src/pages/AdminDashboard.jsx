@@ -19,6 +19,8 @@ const AdminDashboard = () => {
   // Settings State
   const [settings, setSettings] = useState({ cod_enabled: true, partial_payment_enabled: false, partial_payment_percent: 50 });
   const [settingsStatus, setSettingsStatus] = useState('');
+  const [newHeroSlide, setNewHeroSlide] = useState({ title: '', description: '', image_url: '' });
+  const [slideUploading, setSlideUploading] = useState(false);
   
   // Order Edits State (Drafts)
   const [orderEdits, setOrderEdits] = useState({});
@@ -805,6 +807,197 @@ const AdminDashboard = () => {
                     onChange={(e) => setSettings({ ...settings, partial_payment_percent: parseInt(e.target.value) })}
                     className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full md:w-1/3" 
                   />
+                </div>
+              )}
+            </div>
+
+            {/* Homepage Hero Customization */}
+            <div className="flex flex-col gap-4 p-4 bg-background/50 border border-white/10 rounded-xl">
+              <h3 className="font-bold text-lg text-primary">Homepage Hero Showcase</h3>
+              <p className="text-sm text-muted-foreground">Customize the main hero cover picture or set up a looping multi-image carousel.</p>
+
+              {/* Single Hero Image Upload */}
+              <div className="flex flex-col gap-2 mt-2">
+                <label className="text-xs text-muted-foreground font-semibold">Hero Background / Main Image</label>
+                <div className="flex items-center gap-4">
+                  {settings.hero_image_url && (
+                    <img 
+                      src={settings.hero_image_url} 
+                      alt="Hero Cover" 
+                      className="w-16 h-16 rounded-xl object-cover border border-white/10"
+                    />
+                  )}
+                  <label className="flex-1 flex items-center justify-center h-16 border border-dashed border-white/10 hover:border-primary/50 rounded-xl cursor-pointer bg-white/5 transition-all">
+                    <span className="text-xs text-muted-foreground font-medium hover:text-white">Upload New Hero Image</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setSettingsStatus('Uploading hero cover image...');
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `hero-${Date.now()}.${fileExt}`;
+                          const { data, error } = await supabase.storage.from('product-images').upload(fileName, file);
+                          if (error) throw error;
+                          const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                          setSettings({ ...settings, hero_image_url: publicUrl });
+                          setSettingsStatus('Hero image uploaded successfully!');
+                          setTimeout(() => setSettingsStatus(''), 3000);
+                        } catch (err) {
+                          console.error("Hero upload error:", err);
+                          setSettingsStatus('Failed to upload hero image.');
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <input 
+                  type="text" 
+                  value={settings.hero_image_url || ''} 
+                  onChange={(e) => setSettings({ ...settings, hero_image_url: e.target.value })}
+                  placeholder="Or paste direct cover URL..." 
+                  className="bg-background border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full mt-1"
+                />
+              </div>
+
+              {/* Carousel Toggle Switch */}
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl mt-2">
+                <div>
+                  <h4 className="font-bold text-sm">Enable Multi-Image Carousel Mode</h4>
+                  <p className="text-xs text-muted-foreground">If enabled, the hero section will loop through all carousel confections.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={settings.hero_use_carousel || false} 
+                    onChange={(e) => setSettings({ ...settings, hero_use_carousel: e.target.checked })} 
+                  />
+                  <div className="w-14 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+
+              {/* Carousel Urls Management */}
+              {settings.hero_use_carousel && (
+                <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-4">
+                  <h4 className="font-bold text-md text-primary">Advanced Carousel Slide Manager</h4>
+                  <p className="text-xs text-muted-foreground">Add slides with gorgeous custom titles, descriptions, and images. They will fade in sync!</p>
+
+                  {/* Add Slide Builder form */}
+                  <div className="p-4 bg-background border border-white/5 rounded-2xl flex flex-col gap-3">
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Create New Slide</h5>
+                    
+                    <input 
+                      type="text" 
+                      placeholder="Slide Title / Confection Name" 
+                      value={newHeroSlide.title} 
+                      onChange={(e) => setNewHeroSlide({ ...newHeroSlide, title: e.target.value })}
+                      className="bg-background/80 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full"
+                    />
+
+                    <textarea 
+                      rows="2" 
+                      placeholder="Slide Description / Captivating Details" 
+                      value={newHeroSlide.description} 
+                      onChange={(e) => setNewHeroSlide({ ...newHeroSlide, description: e.target.value })}
+                      className="bg-background/80 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full"
+                    />
+
+                    <div className="flex items-center gap-3">
+                      {newHeroSlide.image_url ? (
+                        <div className="relative rounded-lg overflow-hidden w-10 h-10 border border-primary/20">
+                          <img src={newHeroSlide.image_url} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <label className="flex-1 flex items-center justify-center h-10 border border-dashed border-white/10 hover:border-primary/50 rounded-xl cursor-pointer bg-white/5 transition-all text-[11px] text-muted-foreground">
+                          {slideUploading ? "Uploading slide picture..." : "📷 Upload Slide Photo"}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            disabled={slideUploading}
+                            className="hidden" 
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              setSlideUploading(true);
+                              try {
+                                const fileExt = file.name.split('.').pop();
+                                const fileName = `slide-${Date.now()}.${fileExt}`;
+                                const { data, error } = await supabase.storage.from('product-images').upload(fileName, file);
+                                if (error) throw error;
+                                const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                                setNewHeroSlide(prev => ({ ...prev, image_url: publicUrl }));
+                              } catch (err) {
+                                console.error(err);
+                                alert("Failed to upload slide image");
+                              } finally {
+                                setSlideUploading(false);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                      
+                      <input 
+                        type="text" 
+                        placeholder="Or direct image url..." 
+                        value={newHeroSlide.image_url} 
+                        onChange={(e) => setNewHeroSlide({ ...newHeroSlide, image_url: e.target.value })}
+                        className="bg-background border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-[10px] flex-1"
+                      />
+                    </div>
+
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        if (!newHeroSlide.image_url || !newHeroSlide.title) {
+                          alert("Please provide at least a title and a slide image!");
+                          return;
+                        }
+                        const currentSlides = Array.isArray(settings.hero_slides) ? settings.hero_slides : [];
+                        const updatedSlides = [...currentSlides, newHeroSlide];
+                        setSettings({ ...settings, hero_slides: updatedSlides });
+                        setNewHeroSlide({ title: '', description: '', image_url: '' });
+                      }}
+                      className="bg-primary/20 hover:bg-primary text-primary hover:text-white font-bold py-2 rounded-xl text-xs transition-all mt-1"
+                    >
+                      + Add Slide to Carousel
+                    </button>
+                  </div>
+
+                  {/* Active list of Carousel Slides */}
+                  <div className="flex flex-col gap-2 mt-2">
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Slide Sequence</h5>
+                    
+                    {Array.isArray(settings.hero_slides) && settings.hero_slides.length > 0 ? (
+                      <div className="flex flex-col gap-3">
+                        {settings.hero_slides.map((slide, i) => (
+                          <div key={i} className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
+                            <img src={slide.image_url} className="w-12 h-12 rounded-lg object-cover border border-white/10 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-xs truncate text-foreground">{slide.title}</h4>
+                              <p className="text-[10px] text-muted-foreground line-clamp-1">{slide.description}</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const updated = settings.hero_slides.filter((_, index) => index !== i);
+                                setSettings({ ...settings, hero_slides: updated });
+                              }}
+                              className="text-xs text-destructive hover:underline font-bold px-2 py-1"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">No slide confections added yet. Add one above!</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

@@ -2,24 +2,59 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import { getFeaturedProducts } from '../api/products';
+import { getStoreSettings } from '../api/admin';
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({ hero_image_url: '', hero_use_carousel: false, hero_carousel_urls: '' });
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndSettings = async () => {
       try {
-        const data = await getFeaturedProducts();
-        setProducts(data);
+        const [prodData, settingsData] = await Promise.all([
+          getFeaturedProducts(),
+          getStoreSettings()
+        ]);
+        setProducts(prodData || []);
+        if (settingsData) setSettings(settingsData);
       } catch (error) {
-        console.error("Error fetching featured products:", error);
+        console.error("Error fetching homepage details:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchProductsAndSettings();
   }, []);
+
+  const heroSlides = Array.isArray(settings.hero_slides) && settings.hero_slides.length > 0 
+    ? settings.hero_slides 
+    : [
+        {
+          image_url: 'https://placehold.co/600x600/1E1E1E/8B5CF6?text=Quantum+Macaron',
+          title: 'Quantum Macaron',
+          description: 'Multi-dimensional luxury confectionery prepared with freeze-dried star dust.'
+        },
+        {
+          image_url: 'https://placehold.co/600x600/1E1E1E/06B6D4?text=Nebula+Truffle',
+          title: 'Nebula Truffle',
+          description: 'Slow-churned dark cocoa layers infused with premium zero-gravity ganache.'
+        },
+        {
+          image_url: 'https://placehold.co/600x600/1E1E1E/EC4899?text=Supernova+Cake',
+          title: 'Supernova Cake',
+          description: 'Explosive pink raspberry sponge enveloped in a decadent mirror-glaze shield.'
+        }
+      ];
+
+  useEffect(() => {
+    if (!settings.hero_use_carousel || heroSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % heroSlides.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [settings.hero_use_carousel, heroSlides.length]);
 
   return (
     <div className="flex flex-col gap-24 pb-20">
@@ -29,19 +64,54 @@ const HomePage = () => {
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] animate-blob mix-blend-screen" style={{ animationDelay: '2s' }}></div>
         
         <div className="container mx-auto px-4 z-10 flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 flex flex-col gap-6 text-center md:text-left">
+          <div className="flex-1 flex flex-col gap-6 text-center md:text-left min-h-[350px] justify-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 w-fit mx-auto md:mx-0 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="text-xs font-medium text-primary">New Cyber Collection Out Now</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight">
-              Taste the <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500">Future of Sweet</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
-              Experience our luxury dessert boutique where culinary art meets cyberpunk aesthetics. Handcrafted confections for the modern connoisseur.
-            </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
+
+            {settings.hero_use_carousel ? (
+              <div className="relative min-h-[220px]">
+                {heroSlides.map((slide, index) => {
+                  const titleWords = slide.title ? slide.title.split(' ') : ['Future', 'Sweet'];
+                  const firstWord = titleWords[0];
+                  const remainingWords = titleWords.slice(1).join(' ') || 'Confection';
+
+                  return (
+                    <div 
+                      key={index} 
+                      className={`transition-all duration-1000 transform absolute inset-x-0 top-0 ${
+                        index === activeSlide 
+                          ? 'opacity-100 translate-y-0 z-10' 
+                          : 'opacity-0 translate-y-4 z-0 pointer-events-none'
+                      }`}
+                    >
+                      <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
+                        {firstWord} <br />
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500">
+                          {remainingWords}
+                        </span>
+                      </h1>
+                      <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0 mt-4 leading-relaxed">
+                        {slide.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
+                  Taste the <br />
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500">Future of Sweet</span>
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0 mt-4 leading-relaxed">
+                  Experience our luxury dessert boutique where culinary art meets cyberpunk aesthetics. Handcrafted confections for the modern connoisseur.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-6">
               <Link to="/products" className="px-8 py-4 rounded-full bg-primary text-white font-bold hover:bg-primary/90 transition-all hover:neon-glow hover:-translate-y-1">
                 Explore Menu
               </Link>
@@ -52,9 +122,27 @@ const HomePage = () => {
           </div>
           <div className="flex-1 relative w-full max-w-lg aspect-square">
              {/* 3D-like Hero Image Container */}
-             <div className="w-full h-full glassmorphism rounded-full p-8 border border-white/10 relative animate-[float_6s_ease-in-out_infinite]">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-full"></div>
-                <img src="https://placehold.co/600x600/1E1E1E/8B5CF6?text=3D+Dessert" alt="Featured Dessert" className="w-full h-full object-cover rounded-full mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
+             <div className="w-full h-full glassmorphism rounded-full p-8 border border-white/10 relative overflow-hidden animate-[float_6s_ease-in-out_infinite] flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-full z-10 pointer-events-none"></div>
+                
+                {settings.hero_use_carousel && heroSlides.length > 0 ? (
+                  heroSlides.map((slide, index) => (
+                    <img 
+                      key={index} 
+                      src={slide.image_url} 
+                      alt={slide.title} 
+                      className={`absolute inset-0 w-full h-full object-cover rounded-full mix-blend-luminosity hover:mix-blend-normal transition-opacity duration-1000 ${
+                        index === activeSlide ? 'opacity-100 z-0' : 'opacity-0'
+                      }`} 
+                    />
+                  ))
+                ) : (
+                  <img 
+                    src={settings.hero_image_url || "https://placehold.co/600x600/1E1E1E/8B5CF6?text=3D+Dessert"} 
+                    alt="Featured Dessert" 
+                    className="absolute inset-0 w-full h-full object-cover rounded-full mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
+                  />
+                )}
              </div>
           </div>
         </div>
