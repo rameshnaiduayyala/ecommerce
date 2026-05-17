@@ -8,8 +8,32 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrackingOrder, setSelectedTrackingOrder] = useState(null);
+  const [settings, setSettings] = useState({
+    store_name: 'Aha Konaseema',
+    origin_address: 'Ravulapalem, East Godavari District, Andhra Pradesh',
+    courier_partner: 'Ghee Express Courier',
+    support_email: 'support@ahakonaseema.com',
+    support_phone: '+91 888 777 6666',
+    guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
+  });
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('id', 'default_settings')
+          .single();
+        if (data && !error) {
+          setSettings(prev => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        console.error("Error loading store settings:", err);
+      }
+    };
+    fetchSettings();
+
     const fetchOrders = async () => {
       if (!user) return;
       
@@ -88,6 +112,12 @@ const OrdersPage = () => {
                     🎯 Track Live
                   </button>
                 )}
+                <button 
+                  onClick={() => window.open('/print/invoice/' + order.id, '_blank')}
+                  className="flex items-center gap-1 text-xs font-black bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-full transition-all hover:scale-105 active:scale-95"
+                >
+                  🧾 Invoice
+                </button>
               </div>
             </div>
             
@@ -238,6 +268,7 @@ const OrdersPage = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

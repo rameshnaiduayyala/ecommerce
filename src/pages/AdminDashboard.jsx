@@ -17,7 +17,17 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
 
   // Settings State
-  const [settings, setSettings] = useState({ cod_enabled: true, partial_payment_enabled: false, partial_payment_percent: 50 });
+  const [settings, setSettings] = useState({ 
+    cod_enabled: true, 
+    partial_payment_enabled: false, 
+    partial_payment_percent: 50,
+    store_name: 'Aha Konaseema',
+    origin_address: 'Ravulapalem, East Godavari District, Andhra Pradesh',
+    courier_partner: 'Ghee Express Courier',
+    support_email: 'support@ahakonaseema.com',
+    support_phone: '+91 888 777 6666',
+    guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
+  });
   const [settingsStatus, setSettingsStatus] = useState('');
   const [newHeroSlide, setNewHeroSlide] = useState({ title: '', description: '', image_url: '' });
   const [slideUploading, setSlideUploading] = useState(false);
@@ -630,9 +640,23 @@ const AdminDashboard = () => {
 
                                 <button 
                                   onClick={() => setSelectedFulfillmentOrder(order)}
-                                  className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all"
+                                  className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
                                 >
-                                  📋 Fulfillment Docket
+                                  📋 Docket
+                                </button>
+
+                                <button 
+                                  onClick={() => window.open('/print/packing-slip/' + order.id, '_blank')}
+                                  className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-amber-500 hover:text-black text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                >
+                                  📦 Slip
+                                </button>
+
+                                <button 
+                                  onClick={() => window.open('/print/invoice/' + order.id, '_blank')}
+                                  className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-amber-500 hover:text-black text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                >
+                                  🧾 Invoice
                                 </button>
                               </div>
 
@@ -1173,6 +1197,81 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* Store Packing & Print Settings */}
+            <div className="flex flex-col gap-4 p-4 bg-background/50 border border-white/10 rounded-xl">
+              <h3 className="font-bold text-lg text-primary">Store Packing & Invoice Customization</h3>
+              <p className="text-sm text-muted-foreground">Configure the dynamic details printed on customer invoices and admin packaging slips.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Brand Store Name</label>
+                  <input 
+                    type="text" 
+                    value={settings.store_name || ''} 
+                    onChange={(e) => setSettings({ ...settings, store_name: e.target.value })}
+                    placeholder="E.g. Aha Konaseema"
+                    className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm" 
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Carrier Logistics Name</label>
+                  <input 
+                    type="text" 
+                    value={settings.courier_partner || ''} 
+                    onChange={(e) => setSettings({ ...settings, courier_partner: e.target.value })}
+                    placeholder="E.g. Ghee Express Courier"
+                    className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Fulfillment Kitchen Origin Address</label>
+                <textarea 
+                  value={settings.origin_address || ''} 
+                  onChange={(e) => setSettings({ ...settings, origin_address: e.target.value })}
+                  placeholder="E.g. Ravulapalem, East Godavari District, Andhra Pradesh"
+                  rows="2"
+                  className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm leading-relaxed" 
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Support Email Address</label>
+                  <input 
+                    type="email" 
+                    value={settings.support_email || ''} 
+                    onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
+                    placeholder="E.g. support@ahakonaseema.com"
+                    className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm" 
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Support Contact Phone</label>
+                  <input 
+                    type="text" 
+                    value={settings.support_phone || ''} 
+                    onChange={(e) => setSettings({ ...settings, support_phone: e.target.value })}
+                    placeholder="E.g. +91 888 777 6666"
+                    className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Quality Seal / Invoice Terms Guarantee</label>
+                <textarea 
+                  value={settings.guarantee_text || ''} 
+                  onChange={(e) => setSettings({ ...settings, guarantee_text: e.target.value })}
+                  placeholder="Items separated by bullet '•' will be printed as checkboxes (e.g. Pure Ghee verified • Vacuum leakage protection sealed)"
+                  rows="3"
+                  className="bg-background border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-white text-sm leading-relaxed" 
+                />
+                <p className="text-[10px] text-muted-foreground italic">Use the dot symbol '•' (Alt + 0149 / option + 8) to separate bulleted quality seals printed on packing slips.</p>
+              </div>
+            </div>
             
             <button type="submit" className="bg-primary text-white font-bold py-4 rounded-xl hover:bg-primary/90 transition-all hover:neon-glow">
               Save Settings
@@ -1277,183 +1376,193 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-      </div> {/* Close print:hidden main dashboard container */}
+      </div> 
 
       {/* Fulfillment Docket & Printable Packing Slip Overlay */}
-      {selectedFulfillmentOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity">
-          {/* Print container configuration style */}
-          <style>{`
-            @media print {
-              /* Hide all headers, navbars, footers, and other dashboard menus */
-              nav, footer, header, .no-print, .print-hidden {
-                display: none !important;
-              }
-              /* Eliminate modal backdrops and backgrounds */
-              .fixed {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                height: auto !important;
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-              }
-              .relative {
-                border: none !important;
-                box-shadow: none !important;
-                background: white !important;
-                color: black !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-              }
-              /* Print slips full width pure black-on-white text */
-              #packing-slip-print-area {
-                display: block !important;
-                background: white !important;
-                color: black !important;
-                width: 100% !important;
-                border: none !important;
-                padding: 20px !important;
-                margin: 0 !important;
-              }
-              #packing-slip-print-area * {
-                color: black !important;
-                border-color: #ddd !important;
-                background: transparent !important;
-              }
-            }
-          `}</style>
-          
-          {/* Backdrop Closer */}
-          <div className="absolute inset-0" onClick={() => setSelectedFulfillmentOrder(null)}></div>
-          
-          <div className="relative w-full max-w-2xl bg-[#121214] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-[0_0_50px_rgba(0,0,0,0.85)]">
-            {/* Action Bar (No Print) */}
-            <div className="flex justify-between items-center no-print border-b border-white/10 pb-4">
-              <div>
-                <h3 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600 font-sans tracking-tight">
-                  Fulfillment Docket
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5 font-medium">Aha Konaseema SweetVerse Logistics Manager</p>
-              </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => window.print()}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                >
-                  🖨️ Print Packing Slip
-                </button>
-                <button 
-                  onClick={() => setSelectedFulfillmentOrder(null)}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+      {selectedFulfillmentOrder && (() => {
+        const printStoreName = settings.store_name || 'Aha Konaseema';
+        const printOriginAddress = settings.origin_address || 'Ravulapalem, East Godavari District, Andhra Pradesh';
+        const printCourierPartner = settings.courier_partner || 'Ghee Express Courier';
+        const printSupportEmail = settings.support_email || 'support@ahakonaseema.com';
+        const printSupportPhone = settings.support_phone || '+91 888 777 6666';
+        const printGuaranteeText = settings.guarantee_text || 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached';
+        const guaranteeItems = printGuaranteeText.split('•').map(s => s.trim()).filter(Boolean);
 
-            {/* Print Area */}
-            <div id="packing-slip-print-area" className="flex flex-col gap-6 bg-white/5 text-white rounded-2xl p-6 border border-white/5 print:bg-white print:text-black print:border-none">
-              
-              {/* Slip Header */}
-              <div className="flex justify-between items-start border-b border-white/10 print:border-black/20 pb-6">
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity">
+            {/* Print container configuration style */}
+            <style>{`
+              @media print {
+                /* Hide all headers, navbars, footers, and other dashboard menus */
+                nav, footer, header, .no-print, .print-hidden {
+                  display: none !important;
+                }
+                /* Eliminate modal backdrops and backgrounds */
+                .fixed {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  background: white !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                  border: none !important;
+                }
+                .relative {
+                  border: none !important;
+                  box-shadow: none !important;
+                  background: white !important;
+                  color: black !important;
+                  max-width: 100% !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                }
+                /* Print slips full width pure black-on-white text */
+                #packing-slip-print-area {
+                  display: block !important;
+                  background: white !important;
+                  color: black !important;
+                  width: 100% !important;
+                  border: none !important;
+                  padding: 20px !important;
+                  margin: 0 !important;
+                }
+                #packing-slip-print-area * {
+                  color: black !important;
+                  border-color: #ddd !important;
+                  background: transparent !important;
+                }
+              }
+            `}</style>
+            
+            {/* Backdrop Closer */}
+            <div className="absolute inset-0" onClick={() => setSelectedFulfillmentOrder(null)}></div>
+            
+            <div className="relative w-full max-w-2xl bg-[#121214] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-[0_0_50px_rgba(0,0,0,0.85)]">
+              {/* Action Bar (No Print) */}
+              <div className="flex justify-between items-center no-print border-b border-white/10 pb-4">
                 <div>
-                  <h2 className="text-2xl font-black text-amber-500 print:text-black font-sans tracking-tight">
-                    AHA KONASEEMA
-                  </h2>
-                  <p className="text-[10px] text-muted-foreground print:text-black/60 uppercase font-black tracking-widest mt-1">Sweets & Savories Fulfillment Slip</p>
+                  <h3 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600 font-sans tracking-tight">
+                    Fulfillment Docket
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium">{printStoreName} Logistics Manager</p>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs font-mono font-bold text-white print:text-black">
-                    ORDER ID: #{selectedFulfillmentOrder.id.toUpperCase()}
-                  </span>
-                  <p className="text-[10px] text-muted-foreground print:text-black/60 mt-1">
-                    Date Placed: {new Date(selectedFulfillmentOrder.created_at).toLocaleString()}
-                  </p>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => window.open('/print/packing-slip/' + selectedFulfillmentOrder.id, '_blank')}
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                  >
+                    🖨️ Packing Slip
+                  </button>
+                  <button 
+                    onClick={() => window.open('/print/invoice/' + selectedFulfillmentOrder.id, '_blank')}
+                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all"
+                  >
+                    🧾 Customer Invoice
+                  </button>
+                  <button 
+                    onClick={() => setSelectedFulfillmentOrder(null)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
 
-              {/* Shipping Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-white/10 print:border-black/20 text-xs">
-                <div>
-                  <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Ship To Address</h4>
-                  <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
-                    <span className="font-black text-white print:text-black text-sm">
-                      {selectedFulfillmentOrder.shipping_address?.firstName} {selectedFulfillmentOrder.shipping_address?.lastName}
+              {/* Print Area */}
+              <div id="packing-slip-print-area" className="flex flex-col gap-6 bg-white/5 text-white rounded-2xl p-6 border border-white/5 print:bg-white print:text-black print:border-none">
+                
+                {/* Slip Header */}
+                <div className="flex justify-between items-start border-b border-white/10 print:border-black/20 pb-6">
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-500 print:text-black font-sans tracking-tight">
+                      {printStoreName.toUpperCase()}
+                    </h2>
+                    <p className="text-[10px] text-muted-foreground print:text-black/60 uppercase font-black tracking-widest mt-1">Sweets & Savories Fulfillment Slip</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-mono font-bold text-white print:text-black">
+                      ORDER ID: #{selectedFulfillmentOrder.id.toUpperCase()}
                     </span>
-                    <span>{selectedFulfillmentOrder.shipping_address?.address}</span>
-                    <span>{selectedFulfillmentOrder.shipping_address?.city}, {selectedFulfillmentOrder.shipping_address?.postalCode}</span>
-                    <span>{selectedFulfillmentOrder.shipping_address?.country || 'India'}</span>
+                    <p className="text-[10px] text-muted-foreground print:text-black/60 mt-1">
+                      Date Placed: {new Date(selectedFulfillmentOrder.created_at).toLocaleString()}
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Logistics Info</h4>
-                  <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
-                    <span><strong>Carrier:</strong> Ghee Express Courier Service</span>
-                    <span><strong>Origin:</strong> Ravulapalem Sweets Kitchen, AP</span>
-                    <span><strong>Contact Email:</strong> {selectedFulfillmentOrder.users?.email || 'Guest Customer'}</span>
-                    <span><strong>Status:</strong> {selectedFulfillmentOrder.status.toUpperCase()}</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Items List Table */}
-              <div className="flex flex-col gap-3">
-                <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider text-[10px]">Order Details</h4>
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-white/10 print:border-black/20 text-muted-foreground print:text-black/60 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="py-2">Confection Item</th>
-                      <th className="py-2 text-center">Quantity</th>
-                      <th className="py-2 text-right">Unit Price</th>
-                      <th className="py-2 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedFulfillmentOrder.order_items?.map((item, idx) => (
-                      <tr key={idx} className="border-b border-white/5 print:border-black/10 text-muted-foreground print:text-black/80">
-                        <td className="py-2.5 font-bold text-white print:text-black">{item.products?.name}</td>
-                        <td className="py-2.5 text-center font-bold">{item.quantity}</td>
-                        <td className="py-2.5 text-right">₹{item.price_at_time}</td>
-                        <td className="py-2.5 text-right font-bold text-white print:text-black">₹{item.quantity * item.price_at_time}</td>
+                {/* Shipping Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-white/10 print:border-black/20 text-xs">
+                  <div>
+                    <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Ship To Address</h4>
+                    <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
+                      <span className="font-black text-white print:text-black text-sm">
+                        {selectedFulfillmentOrder.shipping_address?.firstName} {selectedFulfillmentOrder.shipping_address?.lastName}
+                      </span>
+                      <span>{selectedFulfillmentOrder.shipping_address?.address}</span>
+                      <span>{selectedFulfillmentOrder.shipping_address?.city}, {selectedFulfillmentOrder.shipping_address?.postalCode}</span>
+                      <span>{selectedFulfillmentOrder.shipping_address?.country || 'India'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Logistics Info</h4>
+                    <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
+                      <span><strong>Carrier:</strong> {printCourierPartner}</span>
+                      <span><strong>Origin:</strong> {printOriginAddress}</span>
+                      <span><strong>Support Contact:</strong> {printSupportPhone} ({printSupportEmail})</span>
+                      <span><strong>Status:</strong> {selectedFulfillmentOrder.status.toUpperCase()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items List Table */}
+                <div className="flex flex-col gap-3">
+                  <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider text-[10px]">Order Details</h4>
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 print:border-black/20 text-muted-foreground print:text-black/60 font-bold uppercase tracking-wider text-[10px]">
+                        <th className="py-2">Confection Item</th>
+                        <th className="py-2 text-center">Quantity</th>
+                        <th className="py-2 text-right">Unit Price</th>
+                        <th className="py-2 text-right">Total</th>
                       </tr>
-                    ))}
-                    <tr className="text-white print:text-black font-bold">
-                      <td colSpan="3" className="py-4 text-right uppercase font-black text-[10px]">Grand Payment Total</td>
-                      <td className="py-4 text-right text-sm text-primary print:text-black font-black">₹{selectedFulfillmentOrder.total_amount}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {selectedFulfillmentOrder.order_items?.map((item, idx) => (
+                        <tr key={idx} className="border-b border-white/5 print:border-black/10 text-muted-foreground print:text-black/80">
+                          <td className="py-2.5 font-bold text-white print:text-black">{item.products?.name}</td>
+                          <td className="py-2.5 text-center font-bold">{item.quantity}</td>
+                          <td className="py-2.5 text-right">₹{item.price_at_time}</td>
+                          <td className="py-2.5 text-right font-bold text-white print:text-black">₹{item.quantity * item.price_at_time}</td>
+                        </tr>
+                      ))}
+                      <tr className="text-white print:text-black font-bold">
+                        <td colSpan="3" className="py-4 text-right uppercase font-black text-[10px]">Grand Payment Total</td>
+                        <td className="py-4 text-right text-sm text-primary print:text-black font-black">₹{selectedFulfillmentOrder.total_amount}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-              {/* Quality Seal Checklist */}
-              <div className="p-4 bg-white/5 print:bg-black/5 rounded-xl border border-white/5 print:border-black/10 flex flex-col gap-2 mt-2">
-                <span className="text-[10px] text-amber-500 print:text-black font-black uppercase tracking-widest">
-                  🛡️ AHA KONASEEMA QUALITY GUARANTEE SEAL
-                </span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] text-muted-foreground print:text-black/80 font-medium">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="accent-amber-500" />
-                    <span>Pure Milk Ghee Freshness verified</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="accent-amber-500" />
-                    <span>Vacuum Leakage protection sealed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="accent-amber-500" />
-                    <span>Konaseema branding seal attached</span>
+                {/* Quality Seal Checklist */}
+                <div className="p-4 bg-white/5 print:bg-black/5 rounded-xl border border-white/5 print:border-black/10 flex flex-col gap-2 mt-2">
+                  <span className="text-[10px] text-amber-500 print:text-black font-black uppercase tracking-widest">
+                    🛡️ {printStoreName.toUpperCase()} QUALITY GUARANTEE SEAL
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] text-muted-foreground print:text-black/80 font-medium">
+                    {guaranteeItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input type="checkbox" defaultChecked className="accent-amber-500" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Product Add / Edit Modal Overlay */}
       {isProductModalOpen && (
