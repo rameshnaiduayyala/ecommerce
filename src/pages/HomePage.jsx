@@ -120,10 +120,10 @@ const HomePage = () => {
               </Link>
             </div>
           </div>
-          <div className="flex-1 relative w-full max-w-lg aspect-square">
+          <div className="flex-1 relative w-full max-w-xl aspect-[16/10]">
              {/* 3D-like Hero Image Container */}
-             <div className="w-full h-full glassmorphism rounded-full p-8 border border-white/10 relative overflow-hidden animate-[float_6s_ease-in-out_infinite] flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-full z-10 pointer-events-none"></div>
+             <div className="w-full h-full glassmorphism rounded-3xl p-3 border border-white/10 relative overflow-hidden animate-[float_6s_ease-in-out_infinite] flex items-center justify-center shadow-[0_0_50px_rgba(245,158,11,0.15)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-3xl z-10 pointer-events-none"></div>
                 
                 {settings.hero_use_carousel && heroSlides.length > 0 ? (
                   heroSlides.map((slide, index) => (
@@ -131,7 +131,7 @@ const HomePage = () => {
                       key={index} 
                       src={slide.image_url} 
                       alt={slide.title} 
-                      className={`absolute inset-0 w-full h-full object-cover rounded-full mix-blend-luminosity hover:mix-blend-normal transition-opacity duration-1000 ${
+                      className={`absolute inset-3 w-[calc(100%-24px)] h-[calc(100%-24px)] object-cover rounded-2xl transition-opacity duration-1000 ${
                         index === activeSlide ? 'opacity-100 z-0' : 'opacity-0'
                       }`} 
                     />
@@ -140,7 +140,7 @@ const HomePage = () => {
                   <img 
                     src={settings.hero_image_url || "https://placehold.co/600x600/1E1E1E/8B5CF6?text=3D+Dessert"} 
                     alt="Featured Dessert" 
-                    className="absolute inset-0 w-full h-full object-cover rounded-full mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
+                    className="absolute inset-3 w-[calc(100%-24px)] h-[calc(100%-24px)] object-cover rounded-2xl transition-all duration-700" 
                   />
                 )}
              </div>
