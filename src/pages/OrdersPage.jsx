@@ -7,6 +7,7 @@ const OrdersPage = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTrackingOrder, setSelectedTrackingOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -70,7 +71,7 @@ const OrdersPage = () => {
                 <p className="text-sm text-muted-foreground mb-1">Order #</p>
                 <p className="font-mono text-sm">{order.id.split('-')[0]}</p>
               </div>
-              <div>
+              <div className="flex items-center gap-3">
                 <div className={`px-4 py-1.5 rounded-full text-sm font-bold border inline-block ${
                   order.status === 'delivered' ? 'bg-green-500/20 text-green-500 border-green-500/50' :
                   order.status === 'processing' ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' :
@@ -79,6 +80,14 @@ const OrdersPage = () => {
                 }`}>
                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                 </div>
+                {order.status !== 'cancelled' && (
+                  <button 
+                    onClick={() => setSelectedTrackingOrder(order)}
+                    className="flex items-center gap-1 text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4 py-2 rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+                  >
+                    🎯 Track Live
+                  </button>
+                )}
               </div>
             </div>
             
@@ -109,6 +118,126 @@ const OrdersPage = () => {
           </div>
         ))}
       </div>
+
+      {/* Live Order Tracking Modal/Drawer */}
+      {selectedTrackingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/80 backdrop-blur-md transition-opacity">
+          {/* Click outside to close */}
+          <div className="absolute inset-0" onClick={() => setSelectedTrackingOrder(null)}></div>
+          
+          <div className="relative w-full max-w-lg h-full bg-background/95 border-l border-white/10 p-6 md:p-8 flex flex-col gap-6 overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,0.8)] z-10 animate-slide-in">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600 font-sans tracking-tight">
+                  Live Order Tracker
+                </h2>
+                <p className="text-[10px] text-muted-foreground font-mono mt-1">ID: #{selectedTrackingOrder.id.split('-')[0].toUpperCase()}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedTrackingOrder(null)}
+                className="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all text-white font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Estimated Delivery Prompt */}
+            <div className="glassmorphism p-5 rounded-2xl border border-amber-500/20 flex flex-col gap-1 relative overflow-hidden bg-gradient-to-r from-amber-500/5 to-transparent">
+              <span className="text-[10px] text-amber-500 font-black uppercase tracking-widest">Ghee Express Status</span>
+              <span className="text-lg font-black text-white">
+                {selectedTrackingOrder.status === 'delivered' ? 'Sweets Delivered!' : 'En Route From Godavari Kitchens'}
+              </span>
+              <span className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                {selectedTrackingOrder.status === 'delivered' 
+                  ? 'Your pure-ghee confections have been delivered successfully. Enjoy the authentic taste!' 
+                  : 'Your confections are prepared and vacuum-sealed for immediate dispatch within 24 hours.'}
+              </span>
+            </div>
+
+            {/* Visual Timeline Stepper */}
+            <div className="flex flex-col gap-8 relative pl-6 border-l border-white/10 py-2 mt-4 ml-3">
+              
+              {/* Step 1: Confirmed */}
+              <div className="relative">
+                {/* Glowing Dot */}
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 bg-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
+                <div>
+                  <h4 className="font-bold text-sm text-white">Order Confirmed</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Sweets order successfully logged & verified in database.</p>
+                  <p className="text-[10px] text-amber-500 font-mono mt-1">
+                    {new Date(selectedTrackingOrder.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2: Preparing */}
+              <div className="relative">
+                <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 transition-all duration-500 ${
+                  selectedTrackingOrder.status === 'processing' || selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                    ? 'bg-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse' 
+                    : 'bg-background border-white/20'
+                }`}></div>
+                <div>
+                  <h4 className={`font-bold text-sm transition-colors duration-500 ${
+                    selectedTrackingOrder.status === 'processing' || selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                      ? 'text-white' : 'text-muted-foreground'
+                  }`}>Preparing in Kitchen</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Our chefs in Ravulapalem are crafting your sweets with authentic pure ghee.</p>
+                </div>
+              </div>
+
+              {/* Step 3: QC Check */}
+              <div className="relative">
+                <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 transition-all duration-500 ${
+                  selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                    ? 'bg-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' 
+                    : 'bg-background border-white/20'
+                }`}></div>
+                <div>
+                  <h4 className={`font-bold text-sm transition-colors duration-500 ${
+                    selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                      ? 'text-white' : 'text-muted-foreground'
+                  }`}>Freshness & Seal Verified</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Strict quality inspection, hygiene validation, and vacuum freshness sealing complete.</p>
+                </div>
+              </div>
+
+              {/* Step 4: Dispatched */}
+              <div className="relative">
+                <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 transition-all duration-500 ${
+                  selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                    ? 'bg-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse' 
+                    : 'bg-background border-white/20'
+                }`}></div>
+                <div>
+                  <h4 className={`font-bold text-sm transition-colors duration-500 ${
+                    selectedTrackingOrder.status === 'delivered' || selectedTrackingOrder.status === 'shipped'
+                      ? 'text-white' : 'text-muted-foreground'
+                  }`}>Dispatched / En Route</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Handed over to Godavari express network carriers for immediate doorstep transit.</p>
+                </div>
+              </div>
+
+              {/* Step 5: Delivered */}
+              <div className="relative">
+                <div className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 transition-all duration-500 ${
+                  selectedTrackingOrder.status === 'delivered'
+                    ? 'bg-green-500 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.6)]' 
+                    : 'bg-background border-white/20'
+                }`}></div>
+                <div>
+                  <h4 className={`font-bold text-sm transition-colors duration-500 ${
+                    selectedTrackingOrder.status === 'delivered' ? 'text-green-400 font-extrabold' : 'text-muted-foreground'
+                  }`}>Delivered Successfully</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Sweets hand-delivered in prime condition. Indulge in the true taste of Konaseema!</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
