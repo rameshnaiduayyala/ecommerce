@@ -22,6 +22,35 @@ const AdminDashboard = () => {
   const [newHeroSlide, setNewHeroSlide] = useState({ title: '', description: '', image_url: '' });
   const [slideUploading, setSlideUploading] = useState(false);
   
+  // Asset Library State
+  const [storageImages, setStorageImages] = useState([]);
+  const [loadingAssets, setLoadingAssets] = useState(false);
+  const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false);
+  const [onAssetSelect, setOnAssetSelect] = useState(() => () => {});
+
+  const openAssetLibrary = async (selectCallback) => {
+    setOnAssetSelect(() => selectCallback);
+    setIsAssetPickerOpen(true);
+    setLoadingAssets(true);
+    try {
+      const { data, error } = await supabase.storage.from('product-images').list('', {
+        limit: 100,
+        sortBy: { column: 'created_at', order: 'desc' }
+      });
+      if (error) throw error;
+      
+      const list = data.map(file => {
+        const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(file.name);
+        return { name: file.name, url: publicUrl };
+      });
+      setStorageImages(list || []);
+    } catch (err) {
+      console.error("Asset fetch error:", err);
+    } finally {
+      setLoadingAssets(false);
+    }
+  };
+  
   // Order Edits State (Drafts)
   const [orderEdits, setOrderEdits] = useState({});
 
@@ -359,14 +388,23 @@ const AdminDashboard = () => {
                 )}
 
                 {/* Back up URL input for flexibility */}
-                <div className="mt-2 pt-2 border-t border-white/5">
-                  <span className="text-[10px] text-muted-foreground">Or paste direct image URL</span>
+                <div className="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-muted-foreground">Or paste direct image URL</span>
+                    <button 
+                      type="button"
+                      onClick={() => openAssetLibrary((url) => setFormData(prev => ({ ...prev, image_url: url })))}
+                      className="text-[10px] text-primary hover:underline font-bold"
+                    >
+                      📁 Browse Cloud Library
+                    </button>
+                  </div>
                   <input 
                     name="image_url" 
                     placeholder="https://..." 
                     value={formData.image_url} 
                     onChange={handleProductChange} 
-                    className="bg-background border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-xs w-full mt-1" 
+                    className="bg-background border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-xs w-full" 
                   />
                 </div>
               </div>
@@ -818,7 +856,16 @@ const AdminDashboard = () => {
 
               {/* Single Hero Image Upload */}
               <div className="flex flex-col gap-2 mt-2">
-                <label className="text-xs text-muted-foreground font-semibold">Hero Background / Main Image</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-muted-foreground font-semibold">Hero Background / Main Image</label>
+                  <button 
+                    type="button"
+                    onClick={() => openAssetLibrary((url) => setSettings(prev => ({ ...prev, hero_image_url: url })))}
+                    className="text-[10px] text-primary hover:underline font-bold"
+                  >
+                    📁 Browse Cloud Library
+                  </button>
+                </div>
                 <div className="flex items-center gap-4">
                   {settings.hero_image_url && (
                     <img 
@@ -906,48 +953,60 @@ const AdminDashboard = () => {
                       className="bg-background/80 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full"
                     />
 
-                    <div className="flex items-center gap-3">
-                      {newHeroSlide.image_url ? (
-                        <div className="relative rounded-lg overflow-hidden w-10 h-10 border border-primary/20">
-                          <img src={newHeroSlide.image_url} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <label className="flex-1 flex items-center justify-center h-10 border border-dashed border-white/10 hover:border-primary/50 rounded-xl cursor-pointer bg-white/5 transition-all text-[11px] text-muted-foreground">
-                          {slideUploading ? "Uploading slide picture..." : "📷 Upload Slide Photo"}
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            disabled={slideUploading}
-                            className="hidden" 
-                            onChange={async (e) => {
-                              const file = e.target.files[0];
-                              if (!file) return;
-                              setSlideUploading(true);
-                              try {
-                                const fileExt = file.name.split('.').pop();
-                                const fileName = `slide-${Date.now()}.${fileExt}`;
-                                const { data, error } = await supabase.storage.from('product-images').upload(fileName, file);
-                                if (error) throw error;
-                                const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
-                                setNewHeroSlide(prev => ({ ...prev, image_url: publicUrl }));
-                              } catch (err) {
-                                console.error(err);
-                                alert("Failed to upload slide image");
-                              } finally {
-                                setSlideUploading(false);
-                              }
-                            }}
-                          />
-                        </label>
-                      )}
-                      
-                      <input 
-                        type="text" 
-                        placeholder="Or direct image url..." 
-                        value={newHeroSlide.image_url} 
-                        onChange={(e) => setNewHeroSlide({ ...newHeroSlide, image_url: e.target.value })}
-                        className="bg-background border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-[10px] flex-1"
-                      />
+                    <div className="flex flex-col gap-1 flex-1">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] text-muted-foreground">Slide Photo URL</span>
+                        <button 
+                          type="button"
+                          onClick={() => openAssetLibrary((url) => setNewHeroSlide(prev => ({ ...prev, image_url: url })))}
+                          className="text-[9px] text-primary hover:underline font-bold"
+                        >
+                          📁 Choose from Storage
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {newHeroSlide.image_url ? (
+                          <div className="relative rounded-lg overflow-hidden w-10 h-10 border border-primary/20 flex-shrink-0">
+                            <img src={newHeroSlide.image_url} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <label className="flex-1 flex items-center justify-center h-10 border border-dashed border-white/10 hover:border-primary/50 rounded-xl cursor-pointer bg-white/5 transition-all text-[11px] text-muted-foreground">
+                            {slideUploading ? "Uploading..." : "📷 Upload Photo"}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              disabled={slideUploading}
+                              className="hidden" 
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                setSlideUploading(true);
+                                try {
+                                  const fileExt = file.name.split('.').pop();
+                                  const fileName = `slide-${Date.now()}.${fileExt}`;
+                                  const { data, error } = await supabase.storage.from('product-images').upload(fileName, file);
+                                  if (error) throw error;
+                                  const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                                  setNewHeroSlide(prev => ({ ...prev, image_url: publicUrl }));
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Failed to upload slide image");
+                                } finally {
+                                  setSlideUploading(false);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                        
+                        <input 
+                          type="text" 
+                          placeholder="Or paste image url..." 
+                          value={newHeroSlide.image_url} 
+                          onChange={(e) => setNewHeroSlide({ ...newHeroSlide, image_url: e.target.value })}
+                          className="bg-background border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-[10px] flex-1"
+                        />
+                      </div>
                     </div>
 
                     <button 
@@ -1006,6 +1065,103 @@ const AdminDashboard = () => {
               Save Settings
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Cloud Asset Library Modal */}
+      {isAssetPickerOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glassmorphism w-full max-w-4xl max-h-[85vh] rounded-3xl border border-white/10 p-6 flex flex-col gap-6 shadow-[0_0_50px_rgba(139,92,246,0.2)]">
+            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  📁 Cloud Asset Library
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">Select an existing image from your bucket or upload a new one.</p>
+              </div>
+              <button 
+                onClick={() => setIsAssetPickerOpen(false)}
+                className="text-muted-foreground hover:text-white text-lg font-bold p-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Grid of assets */}
+            <div className="flex-1 overflow-y-auto min-h-[300px] pr-2">
+              {loadingAssets ? (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground animate-pulse py-20">
+                  <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <span>Scanning cloud repository...</span>
+                </div>
+              ) : storageImages.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  {storageImages.map((img) => (
+                    <div 
+                      key={img.name} 
+                      onClick={() => {
+                        onAssetSelect(img.url);
+                        setIsAssetPickerOpen(false);
+                      }}
+                      className="group relative cursor-pointer border border-white/5 hover:border-primary/50 bg-white/5 hover:bg-white/10 rounded-2xl p-2 transition-all flex flex-col gap-2 justify-between"
+                    >
+                      <div className="aspect-square rounded-xl overflow-hidden bg-black/20 relative">
+                        <img src={img.url} alt={img.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
+                        <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-[10px] bg-primary text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider">Select</span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center block px-1">{img.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-20 gap-2">
+                  <span>No uploaded items found in the Supabase bucket.</span>
+                  <span className="text-xs text-muted-foreground/60">Upload new ones to start building your repository.</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 items-center">
+              {/* Upload inside Picker */}
+              <label className="bg-primary/20 hover:bg-primary text-primary hover:text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer">
+                Upload custom new image
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    setLoadingAssets(true);
+                    try {
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `asset-${Date.now()}.${fileExt}`;
+                      const { error } = await supabase.storage.from('product-images').upload(fileName, file);
+                      if (error) throw error;
+                      
+                      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                      onAssetSelect(publicUrl);
+                      setIsAssetPickerOpen(false);
+                    } catch (err) {
+                      console.error(err);
+                      alert("Asset upload failed.");
+                    } finally {
+                      setLoadingAssets(false);
+                    }
+                  }}
+                />
+              </label>
+
+              <button 
+                onClick={() => setIsAssetPickerOpen(false)}
+                className="px-6 py-2.5 rounded-full glassmorphism text-xs font-bold hover:bg-white/10 transition-all"
+              >
+                Close Library
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
