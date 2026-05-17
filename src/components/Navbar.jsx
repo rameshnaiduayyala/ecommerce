@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import FlashAnnouncement from './FlashAnnouncement';
+import logoImg from '../assets/logo.png';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -21,8 +22,11 @@ const Navbar = () => {
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'glassmorphism border-b border-white/10' : 'bg-transparent'}`}>
       <FlashAnnouncement />
       <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500 neon-glow">
-          SweetVerse
+        <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <img src={logoImg} alt="Aha Konaseema Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)] animate-pulse" />
+          <span className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-600 font-sans">
+            Aha Konaseema
+          </span>
         </Link>
         <nav className="hidden md:flex gap-8 items-center">
           <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">Products</Link>

@@ -52,13 +52,13 @@ const ProductCard = ({ product }) => {
         </div>
       )}
 
-      <Link to={`/products/${product.id}`} className="relative aspect-square overflow-hidden bg-white/5 p-4 flex items-center justify-center block">
-        {/* Placeholder for actual image */}
-        <div className="w-3/4 h-3/4 rounded-full bg-gradient-to-tr from-primary/40 to-accent/40 blur-xl absolute opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <Link to={`/products/${product.id}`} className="relative aspect-[16/10] overflow-hidden bg-white/5 flex items-center justify-center block">
+        {/* Placeholder glow */}
+        <div className="w-full h-full bg-gradient-to-tr from-primary/10 to-accent/10 absolute opacity-40 group-hover:opacity-60 transition-opacity"></div>
         <img 
-          src={product.image_url || `https://placehold.co/400x400/1E1E1E/8B5CF6?text=${product.name.split(' ')[0]}`} 
+          src={product.image_url || `https://placehold.co/600x400/1E1E1E/8B5CF6?text=${product.name.split(' ')[0]}`} 
           alt={product.name}
-          className="relative z-10 w-full h-full object-cover rounded-xl shadow-lg drop-shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+          className="relative z-10 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
         />
         
         {/* Wishlist Button Overlay */}

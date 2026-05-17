@@ -5,6 +5,8 @@ import { getProducts } from '../api/products';
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -20,25 +22,42 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
+  // Filter products dynamically
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === 'All Categories' || 
+                            (product.category && product.category.toLowerCase() === selectedCategory.toLowerCase());
+                            
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-4xl font-bold mb-2">All Products</h1>
-          <p className="text-muted-foreground">Discover our complete collection of futuristic confections.</p>
+          <p className="text-muted-foreground">Discover our complete collection of traditional & authentic confections.</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
           <input 
             type="text" 
             placeholder="Search products..." 
-            className="glassmorphism flex-1 md:w-64 px-4 py-2 rounded-full focus:outline-none focus:border-primary/50 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="glassmorphism flex-1 md:w-64 px-4 py-2 rounded-full focus:outline-none focus:border-primary/50 text-sm bg-background/30"
           />
-          <select className="glassmorphism px-4 py-2 rounded-full focus:outline-none text-sm appearance-none bg-background cursor-pointer">
-            <option>All Categories</option>
-            <option>Macarons</option>
-            <option>Truffles</option>
-            <option>Pastries</option>
-            <option>Cakes</option>
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="glassmorphism px-4 py-2 rounded-full focus:outline-none text-sm bg-background cursor-pointer text-foreground border border-white/10"
+          >
+            <option value="All Categories">All Categories</option>
+            <option value="Macarons">Macarons</option>
+            <option value="Truffles">Truffles</option>
+            <option value="Pastries">Pastries</option>
+            <option value="Cakes">Cakes</option>
           </select>
         </div>
       </div>
@@ -46,14 +65,16 @@ const ProductsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-[420px] glassmorphism rounded-2xl animate-pulse"></div>
+            <div key={i} className="h-[320px] glassmorphism rounded-2xl animate-pulse"></div>
           ))
-        ) : products.length > 0 ? (
-          products.map(product => (
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.map(product => (
             <ProductCard key={product.id} product={product} />
           ))
         ) : (
-          <p className="text-muted-foreground col-span-full text-center py-20">No products found in the database.</p>
+          <p className="text-muted-foreground col-span-full text-center py-20 bg-white/5 rounded-2xl border border-white/5">
+            No products found matching your search.
+          </p>
         )}
       </div>
     </div>

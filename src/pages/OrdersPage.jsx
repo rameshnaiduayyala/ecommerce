@@ -42,7 +42,7 @@ const OrdersPage = () => {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <h2 className="text-3xl font-bold mb-4">No Orders Yet</h2>
-        <p className="text-muted-foreground mb-8">You haven't placed any orders in the SweetVerse yet.</p>
+        <p className="text-muted-foreground mb-8">You haven't placed any orders with us yet.</p>
         <Link to="/products" className="bg-primary text-white font-bold px-8 py-3 rounded-full hover:bg-primary/90 transition-all hover:neon-glow">
           Start Shopping
         </Link>
@@ -97,7 +97,7 @@ const OrdersPage = () => {
                   <img 
                     src={item.products?.image_url || `https://placehold.co/100x100/1E1E1E/8B5CF6?text=${item.products?.name?.charAt(0)}`} 
                     alt={item.products?.name} 
-                    className="w-16 h-16 rounded-xl object-cover border border-white/10" 
+                    className="w-16 h-16 rounded-xl object-contain bg-black/10 border border-white/10" 
                   />
                   <div className="flex-1">
                     <h3 className="font-bold">{item.products?.name}</h3>

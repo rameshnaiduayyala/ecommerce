@@ -49,7 +49,7 @@ const CartPage = () => {
           {cartItems.map(item => (
             <div key={item.id} className="glassmorphism p-4 rounded-2xl flex items-center justify-between gap-6 flex-wrap md:flex-nowrap border border-white/5">
               <div className="flex items-center gap-4 flex-1">
-                <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded-xl border border-white/5" />
+                <img src={item.image_url} alt={item.name} className="w-20 h-20 object-contain bg-black/10 rounded-xl border border-white/5" />
                 <div>
                   <h3 className="font-bold text-lg">{item.name}</h3>
                   <p className="text-muted-foreground text-xs">₹{(item.discount_price || item.price).toFixed(2)}</p>

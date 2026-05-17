@@ -180,8 +180,8 @@ const HomePage = () => {
         <div className="glassmorphism rounded-3xl p-10 md:p-20 text-center relative overflow-hidden border border-primary/20">
           <div className="absolute inset-0 animated-gradient-bg opacity-10"></div>
           <div className="relative z-10 max-w-2xl mx-auto flex flex-col gap-6">
-            <h2 className="text-3xl md:text-5xl font-bold">Join the SweetVerse</h2>
-            <p className="text-muted-foreground text-lg">Subscribe for exclusive access to limited-edition drops and futuristic flavor profiles.</p>
+            <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600">Join Aha Konaseema</h2>
+            <p className="text-muted-foreground text-lg">Subscribe for exclusive access to traditional Indian recipe drops and festival sweets specials.</p>
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <input type="email" placeholder="Enter your email" className="flex-1 bg-background/50 border border-white/10 rounded-full px-6 py-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all backdrop-blur-md" />
               <button className="bg-primary text-white font-bold rounded-full px-8 py-4 hover:bg-primary/90 transition-all hover:neon-glow whitespace-nowrap">

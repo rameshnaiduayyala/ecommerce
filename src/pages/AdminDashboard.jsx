@@ -431,7 +431,7 @@ const AdminDashboard = () => {
               {products.map(p => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-background/50 border border-white/5 rounded-xl hover:border-primary/50 transition-all group">
                   <div className="flex items-center gap-4">
-                    <img src={p.image_url || `https://placehold.co/100x100/1E1E1E/8B5CF6?text=${p.name.charAt(0)}`} className="w-12 h-12 rounded-lg object-cover" />
+                    <img src={p.image_url || `https://placehold.co/100x100/1E1E1E/8B5CF6?text=${p.name.charAt(0)}`} className="w-12 h-12 rounded-lg object-contain bg-black/10" />
                     <div>
                       <h3 className="font-bold">{p.name} {p.featured && <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full ml-2 uppercase">Featured</span>}</h3>
                       <p className="text-sm text-muted-foreground">₹{p.price}</p>
