@@ -8,124 +8,218 @@ const CartPage = () => {
   const [settings, setSettings] = useState({ shipping_fee: 50.00, free_shipping_threshold: 999.00 });
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const data = await getStoreSettings();
-        if (data) setSettings(data);
-      } catch (err) {
-        console.error("Error loading settings:", err);
-      }
-    };
-    fetchSettings();
+    getStoreSettings()
+      .then(data => { if (data) setSettings(data); })
+      .catch(() => {});
   }, []);
 
-  const shippingFee = settings.shipping_fee !== undefined ? parseFloat(settings.shipping_fee) : 50.00;
-  const freeThreshold = settings.free_shipping_threshold !== undefined ? parseFloat(settings.free_shipping_threshold) : 999.00;
+  const shippingFee = parseFloat(settings.shipping_fee ?? 50);
+  const freeThreshold = parseFloat(settings.free_shipping_threshold ?? 999);
   const shipping = cartTotal >= freeThreshold ? 0 : shippingFee;
+  const orderTotal = cartTotal + shipping;
+  const progressPct = Math.min(100, (cartTotal / freeThreshold) * 100);
 
+  // ── EMPTY STATE ──────────────────────────────────────────────────────
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center flex flex-col items-center">
-        <div className="w-32 h-32 glassmorphism rounded-full flex items-center justify-center mb-8 border border-border">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 text-muted-foreground">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 py-20">
+        <div className="w-24 h-24 rounded-full bg-[#f8f4f0] border border-border/50 flex items-center justify-center mb-6 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="w-10 h-10 text-muted-foreground/60">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold mb-4">Your Cart is Empty</h2>
-        <p className="text-muted-foreground mb-8">Looks like you haven't added any quantum confections yet.</p>
-        <Link to="/products" className="bg-primary text-foreground font-bold px-8 py-4 rounded-full hover:bg-primary/90 transition-all hover:neon-glow">
-          Explore Menu
+        <h1 className="text-2xl font-serif font-black text-[#222] mb-2">Your cart is empty</h1>
+        <p className="text-muted-foreground text-sm font-medium mb-8 max-w-xs">
+          You haven't added any sweets yet. Browse our collection and treat yourself!
+        </p>
+        <Link to="/products" className="bg-primary hover:bg-black text-white font-black px-8 py-3.5 rounded-full transition-all uppercase tracking-widest text-xs shadow-md hover:-translate-y-0.5">
+          Browse Sweets
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Your Cart</h1>
-      
-      <div className="flex flex-col lg:flex-row gap-12">
-        <div className="flex-1 flex flex-col gap-6">
-          {cartItems.map(item => (
-            <div key={item.id} className="glassmorphism p-4 rounded-2xl flex items-center justify-between gap-6 flex-wrap md:flex-nowrap border border-white/5">
-              <div className="flex items-center gap-4 flex-1">
-                <img src={item.image_url} alt={item.name} className="w-20 h-20 object-contain bg-black/10 rounded-xl border border-white/5" />
-                <div>
-                  <h3 className="font-bold text-lg">{item.name}</h3>
-                  <p className="text-muted-foreground text-xs">₹{(item.discount_price || item.price).toFixed(2)}</p>
-                </div>
-              </div>
+    <div className="min-h-screen pb-20">
 
-              {/* Quantity Increaser/Decreaser */}
-              <div className="flex items-center bg-black/5 border border-border rounded-full px-3 py-1.5 gap-4">
-                <button 
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="text-muted-foreground hover:text-foreground font-bold text-sm w-5 h-5 flex items-center justify-center transition-all hover:scale-125"
-                >
-                  -
-                </button>
-                <span className="font-mono font-bold text-sm min-w-[20px] text-center text-foreground">{item.quantity}</span>
-                <button 
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="text-muted-foreground hover:text-foreground font-bold text-sm w-5 h-5 flex items-center justify-center transition-all hover:scale-125"
-                >
-                  +
-                </button>
-              </div>
-
-              <div className="font-bold text-lg min-w-[100px] text-right font-mono">
-                ₹{((item.discount_price || item.price) * item.quantity).toFixed(2)}
-              </div>
-              
-              <button onClick={() => removeFromCart(item.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors bg-black/5 rounded-full hover:bg-black/5">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
-              </button>
-            </div>
-          ))}
-          
-          <button onClick={clearCart} className="self-end text-sm text-destructive hover:underline mt-4">
-            Clear Cart
-          </button>
+      {/* Page Banner */}
+      <div className="bg-gradient-to-br from-primary via-[#85161b] to-black text-white py-10 px-4 relative overflow-hidden mb-10">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_20%_50%,_white_1px,_transparent_1px)] bg-[length:30px_30px]" />
+        <div className="container mx-auto relative z-10">
+          <span className="text-[9px] font-black tracking-[0.35em] uppercase text-amber-400 mb-2 block">Your Cart</span>
+          <h1 className="text-3xl md:text-4xl font-serif font-black leading-tight">
+            {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in your bag
+          </h1>
         </div>
-        
-        <div className="w-full lg:w-96">
-          <div className="glassmorphism p-8 rounded-3xl sticky top-28 border border-primary/20">
-            <h3 className="text-xl font-bold mb-6">Order Summary</h3>
-            <div className="flex justify-between mb-4 text-muted-foreground">
-              <span>Subtotal</span>
-              <span className="font-mono">₹{cartTotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between mb-6 text-muted-foreground">
-              <span>Shipping</span>
-              <span className={`font-mono ${shipping === 0 ? 'text-green-400 font-bold' : ''}`}>
-                {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
-              </span>
-            </div>
+      </div>
 
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="flex flex-col lg:flex-row gap-10 items-start">
+
+          {/* ── CART ITEMS ── */}
+          <div className="flex-1 flex flex-col gap-4">
+
+            {/* Free shipping progress */}
             {shipping > 0 && (
-              <div className="mb-6 p-3 bg-primary/10 border border-primary/20 rounded-xl">
-                <p className="text-[11px] text-accent font-semibold text-center">
-                  ⚡ Add <span className="font-mono">₹{(freeThreshold - cartTotal).toFixed(2)}</span> more for FREE Shipping!
+              <div className="bg-amber-50 border border-amber-200/70 rounded-2xl px-5 py-4 flex flex-col gap-2">
+                <p className="text-xs font-bold text-amber-800">
+                  Add <span className="font-black">₹{(freeThreshold - cartTotal).toFixed(2)}</span> more for <span className="text-emerald-600">FREE Shipping!</span>
                 </p>
-                <div className="w-full bg-black/5 h-1.5 rounded-full mt-2 overflow-hidden">
-                  <div 
-                    className="bg-primary h-full transition-all duration-500" 
-                    style={{ width: `${Math.min(100, (cartTotal / freeThreshold) * 100)}%` }}
-                  ></div>
+                <div className="w-full bg-amber-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
                 </div>
               </div>
             )}
+            {shipping === 0 && (
+              <div className="bg-emerald-50 border border-emerald-200/60 rounded-2xl px-5 py-3.5 flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-emerald-500 shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                <p className="text-xs font-bold text-emerald-700">🎉 You qualify for FREE shipping!</p>
+              </div>
+            )}
 
-            <div className="border-t border-border pt-4 flex justify-between mb-8 text-xl font-bold">
-              <span>Total</span>
-              <span className="text-primary font-mono">₹{(cartTotal + shipping).toFixed(2)}</span>
+            {/* Items */}
+            {cartItems.map(item => {
+              const unitPrice = parseFloat(item.discount_price || item.price);
+              const lineTotal = unitPrice * item.quantity;
+              return (
+                <div key={item.id} className="bg-white border border-border/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                  {/* Image */}
+                  <Link to={`/products/${item.id}`} className="shrink-0">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#f8f4f0] border border-border/40">
+                      <img
+                        src={item.image_url || `https://placehold.co/80x80/f8f4f0/BA242A?text=${encodeURIComponent((item.name || '').split(' ')[0])}`}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Link>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/products/${item.id}`}>
+                      <h3 className="font-serif font-black text-sm text-[#222] hover:text-primary transition-colors truncate">{item.name}</h3>
+                    </Link>
+                    {item.category && (
+                      <p className="text-[9px] font-black tracking-widest uppercase text-muted-foreground/60 mt-0.5">{item.category}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground font-medium mt-1">₹{unitPrice.toFixed(2)} each</p>
+                  </div>
+
+                  {/* Qty Stepper */}
+                  <div className="flex items-center border border-border rounded-full bg-[#f8f8f8] shrink-0">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all rounded-l-full font-bold text-sm"
+                    >−</button>
+                    <span className="text-xs font-black text-[#222] min-w-[24px] text-center select-none">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all rounded-r-full font-bold text-sm"
+                    >+</button>
+                  </div>
+
+                  {/* Line total */}
+                  <div className="text-right shrink-0 min-w-[80px]">
+                    <p className="font-serif font-black text-base text-primary">₹{lineTotal.toFixed(2)}</p>
+                  </div>
+
+                  {/* Remove */}
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-black/4 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                    aria-label="Remove item"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Clear cart */}
+            <div className="flex justify-between items-center pt-2">
+              <Link to="/products" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                Continue Shopping
+              </Link>
+              <button onClick={clearCart} className="text-xs font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                Clear Cart
+              </button>
             </div>
-            <Link to="/checkout" className="w-full block text-center bg-primary text-foreground font-bold py-4 rounded-xl hover:bg-primary/90 hover:neon-glow transition-all">
-              Proceed to Checkout
-            </Link>
           </div>
+
+          {/* ── ORDER SUMMARY ── */}
+          <div className="w-full lg:w-[360px] shrink-0">
+            <div className="bg-white border border-border/50 rounded-3xl p-7 sticky top-28 shadow-sm">
+
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-6 pb-5 border-b border-border/40">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-px w-8 bg-primary"></div>
+                  <span className="text-[9px] font-black tracking-[0.4em] uppercase text-primary">Checkout</span>
+                </div>
+                <h2 className="sr-only">Order Summary</h2>
+              </div>
+              <h3 className="text-xl font-serif font-black text-[#222] mb-5 -mt-3">Order Summary</h3>
+
+              {/* Line items */}
+              <div className="flex flex-col gap-3 mb-5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Subtotal ({cartItems.length} items)</span>
+                  <span className="font-bold text-[#222]">₹{cartTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Shipping</span>
+                  <span className={`font-bold ${shipping === 0 ? 'text-emerald-500' : 'text-[#222]'}`}>
+                    {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Free shipping nudge */}
+              {shipping > 0 && (
+                <div className="bg-[#f9f5f0] rounded-xl px-4 py-3 mb-5 border border-amber-100">
+                  <p className="text-[10px] font-bold text-amber-700 mb-1.5">
+                    ₹{(freeThreshold - cartTotal).toFixed(2)} away from free shipping
+                  </p>
+                  <div className="w-full bg-amber-100 h-1 rounded-full overflow-hidden">
+                    <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="border-t border-border/50 pt-4 mb-6 flex justify-between items-baseline">
+                <span className="text-sm font-black text-[#222] uppercase tracking-wider">Total</span>
+                <span className="text-2xl font-serif font-black text-primary">₹{orderTotal.toFixed(2)}</span>
+              </div>
+
+              {/* CTA */}
+              <Link
+                to="/checkout"
+                className="block w-full bg-primary hover:bg-black text-white text-center font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-xs shadow-md hover:-translate-y-0.5"
+              >
+                Proceed to Checkout →
+              </Link>
+
+              {/* Trust signals */}
+              <div className="mt-5 flex flex-col gap-2 pt-4 border-t border-border/30">
+                {[
+                  { icon: '🔒', text: 'Secure & encrypted checkout' },
+                  { icon: '🚚', text: `Free delivery above ₹${freeThreshold.toFixed(0)}` },
+                  { icon: '↩️', text: 'Easy returns & refunds' },
+                ].map(t => (
+                  <div key={t.text} className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground">
+                    <span>{t.icon}</span>
+                    <span>{t.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
