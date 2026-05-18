@@ -10,7 +10,7 @@ const PrintPackingSlip = () => {
     store_name: 'Aha Konaseema',
     origin_address: 'Ravulapalem, East Godavari District, Andhra Pradesh',
     courier_partner: 'Ghee Express Courier',
-    support_email: 'support@ahakonaseema.com',
+    support_email: 'admin@rameshayyala.online',
     support_phone: '+91 888 777 6666',
     guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
   });
@@ -92,7 +92,7 @@ const PrintPackingSlip = () => {
   const printStoreName = settings.store_name || 'Aha Konaseema';
   const printOriginAddress = settings.origin_address || 'Ravulapalem, East Godavari District, Andhra Pradesh';
   const printCourierPartner = settings.courier_partner || 'Ghee Express Courier';
-  const printSupportEmail = settings.support_email || 'support@ahakonaseema.com';
+  const printSupportEmail = settings.support_email || 'admin@rameshayyala.online';
   const printSupportPhone = settings.support_phone || '+91 888 777 6666';
   const printGuaranteeText = settings.guarantee_text || 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached';
   const guaranteeItems = printGuaranteeText.split('•').map(s => s.trim()).filter(Boolean);

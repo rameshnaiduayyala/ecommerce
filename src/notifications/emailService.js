@@ -169,16 +169,23 @@ export const EmailTemplates = {
     });
   },
 
-  sendOrderStatusUpdate: async (to, orderId, status, adminNote = '') => {
+  sendOrderStatusUpdate: async (to, details, status, adminNote = '') => {
+    const baseHtml = EmailTemplates.buildAmazonStyleEmail(details, false);
+    
+    // Inject the status banner right below the header
+    const statusBanner = `
+      <div style="background-color: ${status === 'delivered' ? '#dcfce7' : status === 'cancelled' ? '#fee2e2' : '#fef9c3'}; padding: 15px 25px; border-bottom: 1px solid #ddd;">
+        <h3 style="margin: 0; color: ${status === 'delivered' ? '#166534' : status === 'cancelled' ? '#991b1b' : '#854d0e'};">Update: Your order is now ${status.toUpperCase()}</h3>
+        ${adminNote ? `<p style="margin: 5px 0 0 0; font-size: 14px; color: #333;"><strong>Note from Team:</strong> ${adminNote}</p>` : ''}
+      </div>
+    `;
+
+    const html = baseHtml.replace('<!-- Header -->', '<!-- Header -->' + statusBanner);
+
     return sendEmail({
       to,
-      subject: `Your order #${orderId} is now ${status.toUpperCase()} - SweetVerse`,
-      html: `
-        <h2>Order Update</h2>
-        <p>Your order <strong>#${orderId}</strong> status has been updated to: <strong>${status.toUpperCase()}</strong>.</p>
-        ${adminNote ? `<p><strong>Note from our team:</strong> ${adminNote}</p>` : ''}
-        <p>Thank you for shopping with SweetVerse!</p>
-      `
+      subject: `Order Update: #${details.orderId.split('-')[0].toUpperCase()} is now ${status.toUpperCase()} - Aha Konaseema`,
+      html
     });
   },
 

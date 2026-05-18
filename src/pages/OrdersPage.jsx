@@ -12,7 +12,7 @@ const OrdersPage = () => {
     store_name: 'Aha Konaseema',
     origin_address: 'Ravulapalem, East Godavari District, Andhra Pradesh',
     courier_partner: 'Ghee Express Courier',
-    support_email: 'support@ahakonaseema.com',
+    support_email: 'admin@rameshayyala.online',
     support_phone: '+91 888 777 6666',
     guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
   });

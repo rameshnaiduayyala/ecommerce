@@ -158,7 +158,7 @@ const CheckoutPage = () => {
         // Send full receipt to customer
         await EmailTemplates.sendOrderConfirmation(user.email, orderDetails);
         
-        // Send full alert to admin using dynamic support email from settings
+        // Send full alert to admin using support email from store settings
         const adminEmail = settings.support_email || 'admin@rameshayyala.online'; 
         await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderDetails);
         console.log("Transactional emails sent successfully");

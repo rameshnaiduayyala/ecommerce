@@ -25,7 +25,7 @@ export const getAllOrders = async () => {
     .select(`
       *,
       users(email, full_name),
-      order_items(quantity, price_at_time, products(name))
+      order_items(quantity, price_at_time, products(name, image_url))
     `)
     .order('created_at', { ascending: false });
   if (error) throw error;
