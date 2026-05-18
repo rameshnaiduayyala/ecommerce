@@ -158,6 +158,23 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 
 -- ========================================================
+-- 4.5 PROMOTIONAL COUPONS SCHEMA
+-- ========================================================
+
+-- Create Coupons Table
+CREATE TABLE IF NOT EXISTS public.coupons (
+    code TEXT PRIMARY KEY,
+    discount_type TEXT NOT NULL CHECK (discount_type IN ('percentage', 'flat')),
+    discount_value DECIMAL(10, 2) NOT NULL,
+    min_order_value DECIMAL(10, 2) DEFAULT 0.00,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+
+-- ========================================================
 -- 5. DYNAMIC PRINT & STORE SETTINGS SCHEMA
 -- ========================================================
 
@@ -199,6 +216,7 @@ DROP POLICY IF EXISTS "Allow public read access on products" ON public.products;
 DROP POLICY IF EXISTS "Allow public read access on categories" ON public.categories;
 DROP POLICY IF EXISTS "Anyone can view active announcements" ON public.announcements;
 DROP POLICY IF EXISTS "Anyone can view settings" ON public.store_settings;
+DROP POLICY IF EXISTS "Anyone can view active coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Users can view their own data" ON public.users;
 DROP POLICY IF EXISTS "Users can update their own data" ON public.users;
 DROP POLICY IF EXISTS "Admins can view all users" ON public.users;
@@ -211,18 +229,21 @@ DROP POLICY IF EXISTS "Users can insert their own order items" ON public.order_i
 DROP POLICY IF EXISTS "Admins can view all order items" ON public.order_items;
 DROP POLICY IF EXISTS "Admins can update settings" ON public.store_settings;
 DROP POLICY IF EXISTS "Admins can manage announcements" ON public.announcements;
+DROP POLICY IF EXISTS "Admins can manage coupons" ON public.coupons;
 
 -- Policies for public catalog and announcements
 CREATE POLICY "Allow public read access on products" ON public.products FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on categories" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Anyone can view active announcements" ON public.announcements FOR SELECT USING (true);
 CREATE POLICY "Anyone can view settings" ON public.store_settings FOR SELECT USING (true);
+CREATE POLICY "Anyone can view active coupons" ON public.coupons FOR SELECT USING (is_active = true);
 
 -- Policies for Admin Write Controls
 CREATE POLICY "Admins can update settings" ON public.store_settings FOR UPDATE USING (public.is_admin());
 CREATE POLICY "Admins can manage announcements" ON public.announcements FOR ALL USING (public.is_admin());
 CREATE POLICY "Admins can manage products" ON public.products FOR ALL USING (public.is_admin());
 CREATE POLICY "Admins can manage categories" ON public.categories FOR ALL USING (public.is_admin());
+CREATE POLICY "Admins can manage coupons" ON public.coupons FOR ALL USING (public.is_admin());
 
 -- Users profile policies
 CREATE POLICY "Users can view their own data" ON public.users FOR SELECT USING (auth.uid() = id);
@@ -302,6 +323,11 @@ ON CONFLICT (name) DO NOTHING;
 -- Insert seed announcement flash message
 INSERT INTO public.announcements (text, type, is_active)
 VALUES ('⚡ CELEBRATION DISCOUNTS: Get free express shipping across South India on all orders above ₹999!', 'success', true);
+
+-- Insert seed coupon campaign
+INSERT INTO public.coupons (code, discount_type, discount_value, min_order_value, is_active)
+VALUES ('WELCOME50', 'flat', 50.00, 299.00, true)
+ON CONFLICT (code) DO NOTHING;
 ```
 
 4. Click the green **Run** button at the bottom-right of the SQL editor worksheet. 
@@ -342,8 +368,23 @@ WHERE email = 'your-admin-email@example.com';
 3. Copy the values and paste them into your local `.env` file:
 
 ```env
+# Supabase Cloud Database credentials
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-anon-key-here
+
+# Email Server (cPanel SMTP) Credentials for Order Alerts
+SMTP_HOST=mail.yourdomain.com
+SMTP_PORT=465
+SMTP_USER=admin@yourdomain.com
+SMTP_PASS=YourEmailPasswordHere
+
+# OneSignal Push Notification IDs
+VITE_ONESIGNAL_APP_ID=your-onesignal-app-uuid
+VITE_ONESIGNAL_SAFARI_ID=your-onesignal-safari-uuid
+ONESIGNAL_REST_API_KEY=os_v2_app_yourkeyhere
+
+# Admin Email for Order Notifications
+VITE_ADMIN_EMAIL=admin@yourdomain.com
 ```
 
 ---

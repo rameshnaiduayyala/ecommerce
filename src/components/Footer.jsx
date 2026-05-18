@@ -1,7 +1,36 @@
 import logoImg from '../assets/logo.png';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getStoreSettings } from '../api/admin';
 
 const Footer = () => {
+  const [settings, setSettings] = useState({
+    store_name: 'Aha Konaseema',
+    origin_address: 'Ravulapalem, East Godavari District, Andhra Pradesh - 533238',
+    support_phone: '+91 9988776655',
+    support_email: 'support@ahakonaseema.com',
+  });
+
+  useEffect(() => {
+    let active = true;
+    const fetchSettings = async () => {
+      try {
+        const data = await getStoreSettings();
+        if (data && active) {
+          setSettings(data);
+        }
+      } catch (err) {
+        console.warn("Failed to load store settings in footer", err);
+      }
+    };
+    fetchSettings();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const storeWords = settings.store_name ? settings.store_name.toUpperCase().split(' ') : ['AHA', 'KONASEEMA'];
+
   return (
     <footer className="mt-16 w-full">
       {/* Top Red Section - Traditions */}
@@ -55,7 +84,10 @@ const Footer = () => {
             <div className="flex items-center gap-4">
               <div className="bg-primary text-white rounded-full w-20 h-20 flex flex-col items-center justify-center border-2 border-white shadow-[0_0_0_2px_theme(colors.primary)] shrink-0">
                 <span className="text-[6px] tracking-widest font-serif italic">Since 1948</span>
-                <span className="text-[10px] font-black font-serif tracking-tight text-center leading-tight">AHA<br />KONASEEMA</span>
+                <span className="text-[10px] font-black font-serif tracking-tight text-center leading-tight">
+                  {storeWords[0]}<br />
+                  {storeWords.slice(1).join(' ')}
+                </span>
               </div>
               <div className="max-w-xs">
                 <h4 className="text-primary font-bold text-xs tracking-wider mb-2 uppercase">A Sweet Tradition</h4>
@@ -118,28 +150,28 @@ const Footer = () => {
               <div className="magic-glow-card glow-hover p-6 rounded-3xl bg-white/80 shadow-sm border border-border/50 flex flex-col gap-6">
                 <div className="flex flex-col gap-3">
                   <h4 className="text-lg font-serif font-black text-[#333]">Corporate Office</h4>
-                  <p className="text-xs font-black text-primary">Aha Konaseema Sweets</p>
+                  <p className="text-xs font-black text-primary">{settings.store_name} Sweets</p>
                   <div className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
                     <span>🏢</span>
-                    <p>Ravulapalem, East Godavari District, Andhra Pradesh - 533238</p>
+                    <p>{settings.origin_address}</p>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                     <span>📞</span>
-                    <p>+91 9988776655</p>
+                    <p>{settings.support_phone}</p>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>✉️</span>
-                    <p className="break-all">support@ahakonaseema.com</p>
+                    <p className="break-all">{settings.support_email}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3 pt-4 border-t border-border/50">
                   <h4 className="text-lg font-serif font-black text-[#333]">Customer Care</h4>
-                  <a href="tel:+919988776655" className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center">
-                    📞 +91 9988776655
+                  <a href={`tel:${settings.support_phone}`} className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center">
+                    📞 {settings.support_phone}
                   </a>
-                  <a href="mailto:support@ahakonaseema.com" className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center mt-1">
-                    ✉️ support@ahakonaseema
+                  <a href={`mailto:${settings.support_email}`} className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center mt-1">
+                    ✉️ {settings.support_email}
                   </a>
                 </div>
               </div>
@@ -148,7 +180,7 @@ const Footer = () => {
 
           {/* Copyright & Developer Bar */}
           <div className="border-t border-black/5 mt-16 pt-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} Aha Konaseema. All Rights Reserved.</p>
+            <p>© {new Date().getFullYear()} {settings.store_name}. All Rights Reserved.</p>
             <p className="flex items-center gap-1 font-medium">
               Designed & Developed with <span className="text-primary animate-pulse">❤️</span> by{' '}
               <a
@@ -166,5 +198,4 @@ const Footer = () => {
     </footer>
   );
 };
-
 export default Footer;
