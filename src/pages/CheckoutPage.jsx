@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { getStoreSettings, validateCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
 import { EmailTemplates } from '../notifications/emailService';
+import { pushService } from '../notifications/pushService';
 
 const CheckoutPage = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -181,8 +182,32 @@ const CheckoutPage = () => {
         const adminEmail = settings.support_email || 'admin@rameshayyala.online'; 
         await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderDetails);
         console.log("Transactional emails sent successfully");
+
+        // Send push notification to customer
+        try {
+          await pushService.sendPushNotification({
+            userId: user.id,
+            title: 'Order Placed! 🛍️',
+            message: `Your sweet order #${orderId.slice(0, 8).toUpperCase()} has been placed successfully!`,
+            url: `${window.location.origin}/orders`
+          });
+        } catch (pushErr) {
+          console.warn("Failed to send customer push notification", pushErr);
+        }
+
+        // Send push notification to admin
+        try {
+          await pushService.sendPushNotification({
+            userId: 'admin',
+            title: '🚨 New Order Alert!',
+            message: `Order #${orderId.slice(0, 8).toUpperCase()} received for ₹${finalAmount}`,
+            url: `${window.location.origin}/admin`
+          });
+        } catch (pushErr) {
+          console.warn("Failed to send admin push notification", pushErr);
+        }
       } catch (emailErr) {
-        console.warn("Failed to send transactional emails (likely due to Resend domain verification limits during testing). Order still placed successfully.", emailErr);
+        console.warn("Failed to send transactional notifications. Order still placed successfully.", emailErr);
       }
       
       // 4. Cleanup

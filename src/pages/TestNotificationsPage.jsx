@@ -5,6 +5,7 @@ import { EmailTemplates } from '../notifications/emailService';
 const TestNotificationsPage = () => {
   const [emailStatus, setEmailStatus] = useState('');
   const [email, setEmail] = useState('');
+  const [pushStatus, setPushStatus] = useState('');
 
   const handlePushTest = async () => {
     try {
@@ -13,6 +14,22 @@ const TestNotificationsPage = () => {
     } catch (error) {
       console.error(error);
       alert('Error requesting push permission: ' + error.message);
+    }
+  };
+
+  const handleSendTestPush = async (target) => {
+    setPushStatus(`Sending push notification to '${target}'...`);
+    try {
+      const response = await pushService.sendPushNotification({
+        userId: target === 'me' ? 'all' : target, // target all subscribed for simple testing
+        title: '🔔 Test Notification!',
+        message: 'This is a premium OneSignal push notification from Aha Konaseema!',
+        url: window.location.origin
+      });
+      setPushStatus(`Success! Response: ` + JSON.stringify(response));
+    } catch (err) {
+      console.error(err);
+      setPushStatus(`Failed to send push notification. Note: OneSignal REST API key is required. Error: ` + err.message);
     }
   };
 
@@ -84,12 +101,25 @@ const TestNotificationsPage = () => {
         <p className="mb-4 text-muted-foreground">
           This will prompt the browser for push permissions. You should also see a floating bell icon in the bottom right if OneSignal initialized correctly.
         </p>
-        <button 
-          onClick={handlePushTest}
-          className="bg-purple-600 hover:bg-purple-700 text-foreground px-4 py-2 rounded shadow transition"
-        >
-          Prompt Push Permission
-        </button>
+        <div className="flex flex-wrap gap-4 mb-4">
+          <button 
+            onClick={handlePushTest}
+            className="bg-purple-600 hover:bg-purple-700 text-foreground px-4 py-2 rounded shadow transition text-xs font-bold"
+          >
+            Prompt Push Permission
+          </button>
+          <button 
+            onClick={() => handleSendTestPush('me')}
+            className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 px-4 py-2 rounded shadow transition text-xs font-bold"
+          >
+            🔔 Send Test Push (All Subscribed)
+          </button>
+        </div>
+        {pushStatus && (
+          <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700 text-sm text-muted-foreground break-all">
+            {pushStatus}
+          </div>
+        )}
       </div>
 
       {/* Email Section */}

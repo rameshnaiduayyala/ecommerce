@@ -3,6 +3,7 @@ import { addProduct } from '../api/products';
 import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, deleteOrder, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
 import { EmailTemplates } from '../notifications/emailService';
+import { pushService } from '../notifications/pushService';
 import { SalesTrendChart, OrderStatusChart, ProductDistributionChart } from '../components/AdminCharts';
 import { 
   useReactTable, 
@@ -340,6 +341,18 @@ const AdminDashboard = () => {
       } else {
         await addProduct(payload);
         setStatus('Product added!');
+
+        // Trigger push notification to all subscribed users
+        try {
+          await pushService.sendPushNotification({
+            userId: 'all',
+            title: 'New Sweets Alert! 🍬✨',
+            message: `Freshly prepared "${payload.name}" has been added to our shop. Try it today!`,
+            url: `${window.location.origin}/products`
+          });
+        } catch (pushErr) {
+          console.warn("Failed to trigger product launch push notification", pushErr);
+        }
       }
       
       setFormData({ name: '', price: '', image_url: '', description: '', featured: false, admin_note: '' });
@@ -409,8 +422,20 @@ const AdminDashboard = () => {
             newStatus, 
             originalOrder.admin_note || ''
           );
+
+          // Send push notification status update to the customer
+          try {
+            await pushService.sendPushNotification({
+              userId: originalOrder.user_id,
+              title: 'Order Status Updated! 📦',
+              message: `Your order #${orderId.slice(0, 8).toUpperCase()} is now ${newStatus.toUpperCase()}!`,
+              url: `${window.location.origin}/orders`
+            });
+          } catch (pushErr) {
+            console.warn("Failed to send status update push notification", pushErr);
+          }
         } catch (emailErr) {
-          console.warn("Failed to send status update email. Status was still updated in DB.", emailErr);
+          console.warn("Failed to send status update email/push. Status was still updated in DB.", emailErr);
         }
       }
 
@@ -492,8 +517,20 @@ const AdminDashboard = () => {
             draft.status, 
             draft.admin_note
           );
+
+          // Send push notification status update to the customer
+          try {
+            await pushService.sendPushNotification({
+              userId: originalOrder.user_id,
+              title: 'Order Status Updated! 📦',
+              message: `Your order #${orderId.slice(0, 8).toUpperCase()} is now ${draft.status.toUpperCase()}!${draft.admin_note ? ' Note: ' + draft.admin_note : ''}`,
+              url: `${window.location.origin}/orders`
+            });
+          } catch (pushErr) {
+            console.warn("Failed to send status update push notification", pushErr);
+          }
         } catch (emailErr) {
-          console.warn("Failed to send status update email. Status was still updated in DB.", emailErr);
+          console.warn("Failed to send status update email/push. Status was still updated in DB.", emailErr);
         }
       }
 

@@ -70,6 +70,69 @@ const localApiPlugin = () => ({
             res.end(JSON.stringify({ error: error.message || 'Local send error' }));
           }
         });
+      } else if (req.url === '/api/send-push' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', async () => {
+          try {
+            const { userId, title, message, url } = JSON.parse(body);
+
+            const appId = envVars.ONESIGNAL_APP_ID || envVars.VITE_ONESIGNAL_APP_ID || process.env.ONESIGNAL_APP_ID || process.env.VITE_ONESIGNAL_APP_ID;
+            const restKey = envVars.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_REST_API_KEY;
+
+            if (!appId) {
+              throw new Error("Missing OneSignal App ID in environment configuration");
+            }
+
+            if (!restKey) {
+              console.warn("Local API Push: ONESIGNAL_REST_API_KEY missing. Simulating successful push notification...");
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ 
+                success: true, 
+                simulated: true, 
+                message: 'OneSignal REST API key not configured locally. Trigger simulated.' 
+              }));
+              return;
+            }
+
+            const payload = {
+              app_id: appId,
+              headings: { en: title },
+              contents: { en: message },
+              url: url || ''
+            };
+
+            if (userId === 'all') {
+              payload.included_segments = ['Subscribed Users'];
+            } else if (userId === 'admin') {
+              payload.included_segments = ['Admins'];
+            } else {
+              payload.include_external_user_ids = [userId];
+            }
+
+            const response = await fetch('https://onesignal.com/api/v1/notifications', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Authorization': `Basic ${restKey}`
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            res.statusCode = response.status;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(data));
+          } catch (error) {
+            console.error('Local API Push Error:', error);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: error.message || 'Local push error' }));
+          }
+        });
       } else {
         next();
       }

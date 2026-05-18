@@ -17,6 +17,26 @@ export const pushService = {
   },
 
   /**
+   * Trigger a push notification via the secure serverless gateway
+   * @param {Object} params - { userId, title, message, url }
+   */
+  sendPushNotification: async ({ userId, title, message, url }) => {
+    try {
+      const response = await fetch('/api/send-push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, title, message, url }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to trigger push notification:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Associate the current push subscription with a specific user ID
    * @param {string} userId - The user's unique ID (e.g., from Supabase)
    */
