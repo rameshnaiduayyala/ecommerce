@@ -1,37 +1,31 @@
-import { Resend } from 'resend';
-
-// NOTE: In a production environment, the Resend API key should be kept secure 
-// and emails should ideally be sent via a backend service like Supabase Edge Functions.
-// This service file provides the structure and can be reused in Edge Functions.
-const resendApiKey = import.meta.env.VITE_RESEND_API_KEY || 're_your_api_key_here';
-const resend = new Resend(resendApiKey);
-
 /**
- * Sends an email using Resend
+ * Sends an email using the secure Vercel Serverless Function Backend
  * 
  * @param {Object} options Email options
  * @param {string} options.to Recipient email
  * @param {string} options.subject Email subject
  * @param {React.ReactElement|string} options.html HTML content or React element
- * @returns {Promise<Object>} Response from Resend
+ * @returns {Promise<Object>} Response from API
  */
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'SweetVerse <noreply@sweetverse.com>', // Replace with your verified domain
-      to: [to],
-      subject: subject,
-      html: html,
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ to, subject, html }),
     });
 
-    if (error) {
-      console.error('Error sending email:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || errorData.error?.name || 'Failed to send email');
     }
 
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Failed to send email via Resend:', error);
+    console.error('Failed to send email via API:', error);
     throw error;
   }
 };
