@@ -1,3 +1,32 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Hydrate environment variables from local .env if running in local development
+try {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const envPath = path.resolve(__dirname, '../.env');
+  
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envContent.split('\n').forEach(line => {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let value = match[2] || '';
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        if (!process.env[key]) {
+          process.env[key] = value.trim();
+        }
+      }
+    });
+  }
+} catch (e) {
+  console.warn("Could not load local .env inside push handler:", e);
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
