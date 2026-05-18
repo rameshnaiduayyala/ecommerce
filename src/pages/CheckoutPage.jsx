@@ -138,12 +138,12 @@ const CheckoutPage = () => {
       // 3. Send Emails (Non-blocking: we catch errors so checkout succeeds even if email fails)
       try {
         console.log("Sending transactional emails...");
-        // Send receipt to customer
-        await EmailTemplates.sendOrderConfirmation(user.email, orderData.id, finalAmount);
+        const origin = window.location.origin;
+        // Send receipt to customer with invoice details
+        await EmailTemplates.sendOrderConfirmation(user.email, orderData.id, finalAmount, cartItems, origin);
         
-        // Send alert to admin (using a fixed admin email for now, ideally fetched from settings)
-        // Note: For Resend testing on free tier, admin email MUST match your verified email!
-        const adminEmail = 'techrammy@gmail.com'; 
+        // Send alert to admin using dynamic support email from settings
+        const adminEmail = settings.support_email || 'admin@rameshayyala.online'; 
         await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderData.id, finalAmount);
         console.log("Transactional emails sent successfully");
       } catch (emailErr) {

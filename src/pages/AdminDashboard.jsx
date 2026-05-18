@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addProduct } from '../api/products';
-import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
+import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, deleteOrder, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
 import { EmailTemplates } from '../notifications/emailService';
 
@@ -355,6 +355,18 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       alert("Error updating order");
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (window.confirm("Are you sure you want to permanently delete this order? This cannot be undone.")) {
+      try {
+        await deleteOrder(orderId);
+        loadData();
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting order");
+      }
     }
   };
 
@@ -751,6 +763,14 @@ const AdminDashboard = () => {
                                   className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-amber-500 hover:text-black text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
                                 >
                                   🧾 Invoice
+                                </button>
+
+                                <button 
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  className="flex items-center gap-1 bg-white/5 border border-white/10 hover:bg-destructive hover:text-white text-destructive font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                  title="Delete Order"
+                                >
+                                  🗑️ Delete
                                 </button>
                               </div>
 

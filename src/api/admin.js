@@ -38,6 +38,16 @@ export const updateOrderStatus = async (id, status) => {
   return data;
 };
 
+export const deleteOrder = async (id) => {
+  // First delete associated order_items to avoid foreign key constraint errors
+  const { error: itemsError } = await supabase.from('order_items').delete().eq('order_id', id);
+  if (itemsError) throw itemsError;
+
+  // Then delete the order
+  const { error } = await supabase.from('orders').delete().eq('id', id);
+  if (error) throw error;
+};
+
 // Settings APIs
 export const getStoreSettings = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('id', 'default_settings').single();

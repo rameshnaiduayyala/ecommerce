@@ -42,11 +42,50 @@ export const EmailTemplates = {
     });
   },
   
-  sendOrderConfirmation: async (to, orderId, amount) => {
+  sendOrderConfirmation: async (to, orderId, amount, items = [], origin = '') => {
+    const itemsTable = items.map(item => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.discount_price || item.price}</td>
+      </tr>
+    `).join('');
+
+    const invoiceLink = origin ? `${origin}/print/invoice/${orderId}` : '#';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #d97706; text-transform: uppercase;">Official Invoice & Receipt</h2>
+        <p>Thank you for your order! Your order <strong>#${orderId.split('-')[0].toUpperCase()}</strong> has been successfully confirmed.</p>
+        
+        <h3 style="margin-top: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;">Order Summary</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+          <thead>
+            <tr style="background-color: #f9f9f9;">
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Item</th>
+              <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Qty</th>
+              <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsTable}
+            <tr>
+              <td colspan="2" style="padding: 15px 10px; text-align: right; font-weight: bold;">Grand Total:</td>
+              <td style="padding: 15px 10px; text-align: right; font-weight: bold; color: #d97706; font-size: 16px;">₹${amount}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top: 30px; text-align: center;">
+          <a href="${invoiceLink}" style="background-color: #d97706; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Download / Print Full PDF Invoice</a>
+        </div>
+      </div>
+    `;
+
     return sendEmail({
       to,
-      subject: `Order Confirmation #${orderId} - SweetVerse`,
-      html: `<h2>Thank you for your order!</h2><p>Your order <strong>#${orderId}</strong> for <strong>₹${amount}</strong> has been confirmed.</p>`
+      subject: `Invoice & Order Confirmation #${orderId.split('-')[0].toUpperCase()} - SweetVerse`,
+      html
     });
   },
 
