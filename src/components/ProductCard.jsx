@@ -98,23 +98,23 @@ const ProductCard = ({ product }) => {
           )}
         </div>
         
-        <div className="mt-auto flex items-center gap-2">
-          <div className="flex items-center justify-between border border-border rounded-full px-3 py-2 w-1/3 text-xs text-[#333]">
+        <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center justify-between border border-border rounded-full px-3 py-2 w-full sm:w-1/3 text-xs text-[#333] select-none">
             <span 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuantity(prev => Math.max(1, prev - 1)); }} 
-              className="cursor-pointer opacity-50 hover:opacity-100 p-1"
+              className="cursor-pointer opacity-50 hover:opacity-100 p-1 font-bold"
             >
               -
             </span>
-            <span>{quantity}</span>
+            <span className="font-semibold">{quantity}</span>
             <span 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuantity(prev => prev + 1); }} 
-              className="cursor-pointer opacity-50 hover:opacity-100 p-1"
+              className="cursor-pointer opacity-50 hover:opacity-100 p-1 font-bold"
             >
               +
             </span>
           </div>
-          <button onClick={handleAddToCart} className="flex-1 bg-[#3f3f3f] hover:bg-black text-white text-xs font-semibold py-2.5 rounded-full transition-all active:scale-95 uppercase tracking-wide">
+          <button onClick={handleAddToCart} className="flex-1 bg-[#3f3f3f] hover:bg-black text-white text-xs font-semibold py-2.5 rounded-full transition-all active:scale-95 uppercase tracking-wide cursor-pointer text-center">
             Add to Cart
           </button>
         </div>

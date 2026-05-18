@@ -5,9 +5,12 @@ const Footer = () => {
   return (
     <footer className="mt-16 w-full">
       {/* Top Red Section - Traditions */}
-      <div className="bg-primary text-white py-16 px-4 md:px-8">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-serif text-center mb-12">Our Sweet Traditions</h2>
+      <div className="bg-gradient-to-br from-primary to-[#85161b] text-white py-16 px-4 md:px-8 border-b border-white/5 relative overflow-hidden">
+        {/* Subtle decorative dot layer */}
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-5"></div>
+        
+        <div className="container mx-auto relative z-10">
+          <h2 className="text-3xl font-serif font-black text-center mb-12 tracking-tight text-white drop-shadow-sm">Our Sweet Traditions</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
             <div className="flex flex-col items-center md:items-start gap-4">
@@ -45,8 +48,8 @@ const Footer = () => {
       </div>
 
       {/* Bottom White Section */}
-      <div className="bg-[#fcfafa] py-16 px-4 md:px-8 border-t border-border">
-        <div className="container mx-auto">
+      <div className="bg-[#fcfafa] py-16 px-4 md:px-8 border-t border-border retro-grid-bg relative overflow-hidden">
+        <div className="container mx-auto relative z-10">
           {/* Top of bottom footer */}
           <div className="flex flex-col lg:flex-row justify-between items-start gap-8 mb-16 pb-8 border-b border-black/5">
             <div className="flex items-center gap-4">
@@ -56,7 +59,7 @@ const Footer = () => {
               </div>
               <div className="max-w-xs">
                 <h4 className="text-primary font-bold text-xs tracking-wider mb-2 uppercase">A Sweet Tradition</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                   Rooted in our sweet traditions, we draw inspiration from the cherished practices of our ancestors.
                 </p>
               </div>
@@ -78,65 +81,67 @@ const Footer = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
             <div className="flex flex-col gap-4">
               <h4 className="text-sm font-bold text-muted-foreground tracking-wider uppercase mb-2">Products</h4>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">All Products</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Cake and Cookie Treats</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Classic Baklavas</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Jaggery Sweets</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Khara & Snacks</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">All Products</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Cake and Cookie Treats</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Classic Baklavas</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Jaggery Sweets</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Khara & Snacks</Link>
             </div>
 
             <div className="flex flex-col gap-4">
               <h4 className="text-sm font-bold text-muted-foreground tracking-wider uppercase mb-2">Shop Online</h4>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Pan India</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">International</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Hyderabad</Link>
-              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors">Store Locations</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Pan India</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">International</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Hyderabad</Link>
+              <Link to="/products" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Store Locations</Link>
             </div>
 
             <div className="flex flex-col gap-4">
               <h4 className="text-sm font-bold text-muted-foreground tracking-wider uppercase mb-2">Quick Links</h4>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">About Us</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Contact Us</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Store Locations</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Gifting</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Brand Gallery</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">About Us</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Contact Us</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Store Locations</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Gifting</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Brand Gallery</Link>
             </div>
 
             <div className="flex flex-col gap-4">
               <h4 className="text-sm font-bold text-muted-foreground tracking-wider uppercase mb-2">Policies</h4>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Privacy Policy</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Terms and Conditions</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Shipping Policy</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Payment Policy</Link>
-              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors">Refund Policy</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Privacy Policy</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Terms and Conditions</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Shipping Policy</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Payment Policy</Link>
+              <Link to="/" className="text-sm text-foreground hover:text-primary transition-colors font-medium">Refund Policy</Link>
             </div>
 
             <div className="flex flex-col gap-8 col-span-2 md:col-span-4 lg:col-span-1">
-              <div className="flex flex-col gap-3">
-                <h4 className="text-xl font-serif font-bold text-[#333] mb-2">Corporate Office</h4>
-                <p className="text-sm font-bold text-[#333]">Aha Konaseema Sweets</p>
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span>🏢</span>
-                  <p>Ravulapalem, East Godavari District, Andhra Pradesh - 533238</p>
+              <div className="magic-glow-card glow-hover p-6 rounded-3xl bg-white/80 shadow-sm border border-border/50 flex flex-col gap-6">
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-lg font-serif font-black text-[#333]">Corporate Office</h4>
+                  <p className="text-xs font-black text-primary">Aha Konaseema Sweets</p>
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                    <span>🏢</span>
+                    <p>Ravulapalem, East Godavari District, Andhra Pradesh - 533238</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                    <span>📞</span>
+                    <p>+91 9988776655</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>✉️</span>
+                    <p className="break-all">support@ahakonaseema.com</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                  <span>📞</span>
-                  <p>+91 9988776655</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>✉️</span>
-                  <p>support@ahakonaseema.com</p>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-3">
-                <h4 className="text-xl font-serif font-bold text-[#333] mb-2">Customer Care</h4>
-                <a href="tel:+919988776655" className="bg-primary hover:bg-primary/90 text-white text-sm font-bold py-2.5 px-4 rounded transition-colors flex items-center gap-2 w-fit">
-                  📞 +91 9988776655
-                </a>
-                <a href="mailto:support@ahakonaseema.com" className="bg-primary hover:bg-primary/90 text-white text-sm font-bold py-2.5 px-4 rounded transition-colors flex items-center gap-2 w-fit">
-                  ✉️ support@ahakonaseema.com
-                </a>
+                <div className="flex flex-col gap-3 pt-4 border-t border-border/50">
+                  <h4 className="text-lg font-serif font-black text-[#333]">Customer Care</h4>
+                  <a href="tel:+919988776655" className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center">
+                    📞 +91 9988776655
+                  </a>
+                  <a href="mailto:support@ahakonaseema.com" className="bg-[#333] hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 w-full text-center mt-1">
+                    ✉️ support@ahakonaseema
+                  </a>
+                </div>
               </div>
             </div>
           </div>
