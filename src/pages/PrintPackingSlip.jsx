@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/client';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const PrintPackingSlip = () => {
   const { orderId } = useParams();
@@ -15,6 +16,8 @@ const PrintPackingSlip = () => {
     guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
   });
   const [loading, setLoading] = useState(true);
+
+  useDocumentTitle(order ? `Packing Slip #${order.id.toUpperCase()}` : 'Generating Fulfillment Docket...');
 
   useEffect(() => {
     const fetchData = async () => {

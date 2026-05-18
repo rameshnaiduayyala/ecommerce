@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabase/client';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -15,6 +16,8 @@ const ProductDetailsPage = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [addedAnim, setAddedAnim] = useState(false);
+
+  useDocumentTitle(product ? product.name : 'Loading...');
 
   useEffect(() => {
     const fetchProductDetails = async () => {

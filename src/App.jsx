@@ -22,6 +22,64 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import TestNotificationsPage from './pages/TestNotificationsPage';
 import { initOneSignal } from './notifications/onesignal';
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const routeTitles = {
+  '/': 'Home',
+  '/products': 'Sweets & Delicacies',
+  '/categories': 'Categories',
+  '/cart': 'Shopping Cart',
+  '/checkout': 'Checkout',
+  '/orders': 'My Orders',
+  '/login': 'Login',
+  '/register': 'Register',
+  '/profile': 'My Profile',
+  '/admin': 'Admin Dashboard',
+  '/wishlist': 'My Wishlist',
+  '/search': 'Search Results',
+  '/test-notifications': 'Test Notifications',
+};
+
+const getTitleFromPath = (pathname) => {
+  if (pathname === '/') return 'Aha Konaseema | Traditional Godavari Sweets';
+  
+  if (pathname.startsWith('/products/')) {
+    return 'Product Details | Aha Konaseema';
+  }
+  if (pathname.startsWith('/print/packing-slip/')) {
+    return 'Fulfillment Packing Slip | Aha Konaseema';
+  }
+  if (pathname.startsWith('/print/invoice/')) {
+    return 'Purchase Invoice Receipt | Aha Konaseema';
+  }
+
+  const baseTitle = routeTitles[pathname];
+  if (baseTitle) {
+    return `${baseTitle} | Aha Konaseema`;
+  }
+  
+  // Format segments like /about-us to "About Us | Aha Konaseema"
+  const segment = pathname.split('/').filter(Boolean)[0];
+  if (segment) {
+    const formatted = segment
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    return `${formatted} | Aha Konaseema`;
+  }
+
+  return 'Aha Konaseema';
+};
+
+function TitleUpdater() {
+  const location = useLocation();
+
+  useEffect(() => {
+    document.title = getTitleFromPath(location.pathname);
+  }, [location.pathname]);
+
+  return null;
+}
 
 function App() {
   useEffect(() => {
@@ -32,6 +90,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          <TitleUpdater />
           <Routes>
             {/* Dedicated Print Routes WITHOUT MainLayout wrapper */}
             <Route path="/print/packing-slip/:orderId" element={<PrintPackingSlip />} />

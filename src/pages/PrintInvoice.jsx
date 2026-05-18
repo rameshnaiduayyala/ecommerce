@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabase/client';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const PrintInvoice = () => {
   const { orderId } = useParams();
@@ -14,6 +15,8 @@ const PrintInvoice = () => {
     guarantee_text: 'Pure Milk Ghee Freshness verified • Vacuum leakage protection sealed • Brand seal attached'
   });
   const [loading, setLoading] = useState(true);
+
+  useDocumentTitle(order ? `Invoice #${order.id.toUpperCase()}` : 'Generating Purchase Invoice...');
 
   useEffect(() => {
     const fetchData = async () => {
