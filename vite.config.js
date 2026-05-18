@@ -116,6 +116,12 @@ const localApiPlugin = () => ({
             const isRichKey = restKey.startsWith('os_v2_app_');
             const authHeader = isRichKey ? `Key ${restKey}` : `Basic ${restKey}`;
 
+            console.log("Local API Push Debug Info:");
+            console.log("- appId:", appId);
+            console.log("- restKey starts with os_v2_app_:", isRichKey);
+            console.log("- restKey length:", restKey.length);
+            console.log("- authHeader prefix:", authHeader.slice(0, 15) + "...");
+
             const response = await fetch('https://api.onesignal.com/api/v1/notifications', {
               method: 'POST',
               headers: {
@@ -126,6 +132,7 @@ const localApiPlugin = () => ({
             });
 
             const data = await response.json();
+            console.log("- OneSignal API Response:", data);
             res.statusCode = response.status;
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(data));

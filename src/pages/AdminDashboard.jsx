@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { addProduct } from '../api/products';
 import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, deleteOrder, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
@@ -651,7 +651,7 @@ const AdminDashboard = () => {
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 });
 
-  const orderColumns = [
+  const orderColumns = useMemo(() => [
     {
       accessorKey: 'id',
       header: 'Order ID',
@@ -719,11 +719,12 @@ const AdminDashboard = () => {
       header: 'Fulfillment Actions',
       cell: info => {
         const order = info.row.original;
-        const draft = orderEdits[order.id] || { 
+        const { orderEdits, setOrderEdits, setSelectedFulfillmentOrder, handleSaveOrderChanges, handleDeleteOrder } = info.table.options.meta || {};
+        const draft = orderEdits?.[order.id] || { 
           status: order.status, 
           admin_note: order.admin_note || '' 
         };
-        const hasChanges = orderEdits[order.id] !== undefined;
+        const hasChanges = orderEdits?.[order.id] !== undefined;
 
         return (
           <div className="flex flex-col gap-2 items-center">
@@ -801,7 +802,7 @@ const AdminDashboard = () => {
         );
       }
     }
-  ];
+  ], []);
 
   const orderTable = useReactTable({
     data: orders,
@@ -818,6 +819,13 @@ const AdminDashboard = () => {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    meta: {
+      orderEdits,
+      setOrderEdits,
+      setSelectedFulfillmentOrder,
+      handleSaveOrderChanges,
+      handleDeleteOrder,
+    }
   });
 
   // TanStack Table states for products
@@ -825,7 +833,7 @@ const AdminDashboard = () => {
   const [prodSorting, setProdSorting] = useState([]);
   const [prodPagination, setProdPagination] = useState({ pageIndex: 0, pageSize: 5 });
 
-  const productColumns = [
+  const productColumns = useMemo(() => [
     {
       id: 'thumbnail',
       header: 'Image',
@@ -880,6 +888,7 @@ const AdminDashboard = () => {
       header: 'Actions',
       cell: info => {
         const product = info.row.original;
+        const { startEdit, setIsProductModalOpen, handleDelete } = info.table.options.meta || {};
         return (
           <div className="flex gap-2">
             <button 
@@ -901,7 +910,7 @@ const AdminDashboard = () => {
         );
       }
     }
-  ];
+  ], []);
 
   const productTable = useReactTable({
     data: products,
@@ -918,6 +927,11 @@ const AdminDashboard = () => {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    meta: {
+      startEdit,
+      setIsProductModalOpen,
+      handleDelete,
+    }
   });
 
   return (
