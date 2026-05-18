@@ -31,10 +31,14 @@ export const initOneSignal = async () => {
     });
 
     isInitialized = true;
-    console.log('OneSignal Initialized');
+    console.log('OneSignal Initialized successfully!');
   } catch (error) {
     if (error.message && error.message.includes('already initialized')) {
       isInitialized = true;
+      return;
+    }
+    if (error.message && error.message.includes('Can only be used on:')) {
+      console.info('%cOneSignal: Running locally on localhost. Notifications are configured and locked to production domain: https://ahakonaseema.rameshayyala.online', 'color: #3b82f6; font-weight: bold;');
       return;
     }
     console.error('Error initializing OneSignal:', error);
