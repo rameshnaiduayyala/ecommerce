@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import AnnouncementModal from '../components/AnnouncementModal';
 
 const MainLayout = ({ children }) => {
   return (
@@ -10,6 +11,7 @@ const MainLayout = ({ children }) => {
         {children}
       </main>
       <Footer />
+      <AnnouncementModal />
     </div>
   );
 };
