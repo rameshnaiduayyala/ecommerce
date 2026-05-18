@@ -3,9 +3,10 @@ import { addProduct } from '../api/products';
 import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, deleteOrder, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
 import { EmailTemplates } from '../notifications/emailService';
+import { SalesTrendChart, OrderStatusChart, ProductDistributionChart } from '../components/AdminCharts';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('products'); // 'products' or 'orders'
+  const [activeTab, setActiveTab] = useState('overview'); // default to analytical overview
   
   // Products State
   const [products, setProducts] = useState([]);
@@ -79,9 +80,94 @@ const AdminDashboard = () => {
   const [isAnnModalOpen, setIsAnnModalOpen] = useState(false);
   const [editingAnn, setEditingAnn] = useState(null);
   
+  // Recharts dynamic analytics processors
+  const getSalesTrendData = () => {
+    // Generate empty buckets for the last 7 calendar days dynamically
+    const trendData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toLocaleDateString('en-IN', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+      trendData.push({ name: dateKey, Sales: 0 });
+    }
+
+    if (!orders || orders.length === 0) return trendData;
+
+    orders.forEach(order => {
+      const dateStr = new Date(order.created_at).toLocaleDateString('en-IN', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+      const bucket = trendData.find(day => day.name === dateStr);
+      if (bucket) {
+        bucket.Sales = parseFloat((bucket.Sales + (order.total_amount || 0)).toFixed(2));
+      }
+    });
+
+    return trendData;
+  };
+
+  const getOrderStatusData = () => {
+    if (!orders || orders.length === 0) return [];
+    
+    const counts = {
+      pending: 0,
+      preparing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+    
+    orders.forEach(order => {
+      const status = (order.status || 'pending').toLowerCase();
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      } else {
+        counts.pending++;
+      }
+    });
+    
+    return [
+      { name: 'Delivered', value: counts.delivered, statusKey: 'delivered' },
+      { name: 'Preparing', value: counts.preparing, statusKey: 'preparing' },
+      { name: 'Shipped', value: counts.shipped, statusKey: 'shipped' },
+      { name: 'Pending', value: counts.pending, statusKey: 'pending' },
+      { name: 'Cancelled', value: counts.cancelled, statusKey: 'cancelled' }
+    ].filter(item => item.value > 0);
+  };
+
+  const getProductSalesData = () => {
+    if (!orders || orders.length === 0) return [];
+    
+    const itemSales = {};
+    orders.forEach(order => {
+      (order.order_items || []).forEach(item => {
+        const productName = item.products?.name || 'Unknown Item';
+        itemSales[productName] = (itemSales[productName] || 0) + (item.quantity || 0);
+      });
+    });
+    
+    return Object.keys(itemSales).map(name => ({
+      name: name,
+      Sales: itemSales[name]
+    }));
+  };
+  
   const loadData = async () => {
     try {
-      if (activeTab === 'products') {
+      if (activeTab === 'overview') {
+        const prodData = await getAdminProducts();
+        setProducts(prodData || []);
+        const ordData = await getAllOrders();
+        setOrders(ordData || []);
+        const annData = await getAnnouncements();
+        setAnnouncements(annData || []);
+        const coupData = await getCoupons();
+        setCoupons(coupData || []);
+      } else if (activeTab === 'products') {
         const data = await getAdminProducts();
         setProducts(data);
       } else if (activeTab === 'orders') {
@@ -475,27 +561,40 @@ const AdminDashboard = () => {
         console.error(err);
       }
     }
-  };
-
-  return (
+  };  return (
     <>
-      <div className="container mx-auto px-4 py-12 print:hidden">
+      <div className="container mx-auto px-4 py-12 print:hidden bg-[#fcfcfc] min-h-screen">
         {/* Executive Welcome & Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 font-sans tracking-tight">
+          <h1 className="text-4xl font-serif font-black text-primary tracking-tight">
             Command Center
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Welcome back, Administrator. The Godavari kitchens are active and online.</p>
+          <p className="text-sm text-muted-foreground mt-1.5 font-medium">Welcome back, Administrator. The Godavari kitchens are active and online.</p>
         </div>
         
         {/* Navigation Tabs Pillbox */}
-        <div className="flex flex-wrap gap-2.5 bg-black/5 border border-border p-1.5 rounded-2xl backdrop-blur-md">
+        <div className="flex flex-wrap gap-2.5 bg-white border border-border/80 p-1.5 rounded-2xl shadow-sm">
+          <button 
+            onClick={() => setActiveTab('overview')} 
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
+              activeTab === 'overview' 
+                ? 'bg-primary text-white shadow-md scale-102' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+            </svg>
+            <span>Overview</span>
+          </button>
+
           <button 
             onClick={() => setActiveTab('products')} 
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeTab === 'products' 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-102' 
+                ? 'bg-primary text-white shadow-md scale-102' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -507,9 +606,9 @@ const AdminDashboard = () => {
           
           <button 
             onClick={() => setActiveTab('orders')} 
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeTab === 'orders' 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-102' 
+                ? 'bg-primary text-white shadow-md scale-102' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -518,12 +617,12 @@ const AdminDashboard = () => {
             </svg>
             <span>Orders</span>
           </button>
-
+ 
           <button 
             onClick={() => setActiveTab('announcements')} 
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeTab === 'announcements' 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-102' 
+                ? 'bg-primary text-white shadow-md scale-102' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -532,12 +631,12 @@ const AdminDashboard = () => {
             </svg>
             <span>Flash Updates</span>
           </button>
-
+ 
           <button 
             onClick={() => setActiveTab('coupons')} 
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeTab === 'coupons' 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-102' 
+                ? 'bg-primary text-white shadow-md scale-102' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -547,12 +646,12 @@ const AdminDashboard = () => {
             </svg>
             <span>Coupons</span>
           </button>
-
+ 
           <button 
             onClick={() => setActiveTab('settings')} 
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
               activeTab === 'settings' 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-102' 
+                ? 'bg-primary text-white shadow-md scale-102' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -564,51 +663,66 @@ const AdminDashboard = () => {
           </button>
         </div>
       </div>
-
+ 
       {/* Executive Quick Stats Summary Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="glassmorphism p-5 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300">
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-sm font-black text-amber-500">
+        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             📦
           </div>
           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Total Catalog</span>
-          <span className="text-xl font-black text-foreground">{products.length} Products</span>
+          <span className="text-xl font-black text-[#333]">{products.length} Products</span>
         </div>
         
-        <div className="glassmorphism p-5 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300">
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-sm font-black text-amber-500">
+        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             📊
           </div>
           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Store Orders</span>
-          <span className="text-xl font-black text-foreground">{orders.length} Placed</span>
+          <span className="text-xl font-black text-[#333]">{orders.length} Placed</span>
         </div>
-
-        <div className="glassmorphism p-5 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300">
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-sm font-black text-amber-500">
+ 
+        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             ⚡
           </div>
           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Flash Alerts</span>
-          <span className="text-xl font-black text-foreground">
+          <span className="text-xl font-black text-[#333]">
             {announcements.filter(a => a.is_active).length} Active
           </span>
         </div>
-
-        <div className="glassmorphism p-5 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col gap-1 hover:border-amber-500/30 transition-all duration-300">
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-sm font-black text-amber-500">
+ 
+        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             🎟️
           </div>
           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Coupon Campaign</span>
-          <span className="text-xl font-black text-foreground">
+          <span className="text-xl font-black text-[#333]">
             {coupons.filter(c => c.is_active).length} Active
           </span>
         </div>
       </div>
+ 
+      {activeTab === 'overview' && (
+        <div className="flex flex-col gap-6 animate-fade-in mb-12">
+          {/* Top Main Sales Trend Area Chart */}
+          <div className="w-full">
+            <SalesTrendChart data={getSalesTrendData()} />
+          </div>
+          
+          {/* Side-by-side breakdown charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <OrderStatusChart data={getOrderStatusData()} />
+            <ProductDistributionChart data={getProductSalesData()} />
+          </div>
+        </div>
+      )}
 
       {activeTab === 'products' && (
-        <div className="glassmorphism p-6 rounded-3xl overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
+        <div className="bg-white p-6 rounded-3xl border border-border/50 shadow-sm overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Inventory Management</h2>
+              <h2 className="text-2xl font-bold font-serif text-[#333]">Inventory Management</h2>
               <p className="text-xs text-muted-foreground mt-0.5 font-medium">Add, update, or feature confections in the storefront catalog.</p>
             </div>
             <button 
@@ -617,7 +731,7 @@ const AdminDashboard = () => {
                 setFormData({ name: '', price: '', image_url: '', description: '', featured: false, admin_note: '' });
                 setIsProductModalOpen(true);
               }}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs px-4 py-2 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-102"
+              className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-[0_4px_12px_rgba(186,36,42,0.15)] hover:scale-102 active:scale-98 cursor-pointer"
             >
               + Add Confection
             </button>
@@ -625,18 +739,18 @@ const AdminDashboard = () => {
           
           <div className="overflow-y-auto pr-2 flex flex-col gap-3 flex-1">
             {products.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-4 bg-background/80 border border-white/5 rounded-xl hover:border-primary/50 transition-all group">
+              <div key={p.id} className="flex items-center justify-between p-4 bg-[#fafafa] border border-border/60 rounded-xl hover:border-primary/50 transition-all group">
                 <div className="flex items-center gap-4">
                   <img 
-                    src={p.image_url || `https://placehold.co/100x100/1E1E1E/8B5CF6?text=${p.name.charAt(0)}`} 
+                    src={p.image_url || `https://placehold.co/100x100/F5F5F5/BA242A?text=${p.name.charAt(0)}`} 
                     alt={p.name}
-                    className="w-12 h-12 rounded-lg object-contain bg-black/10 border border-white/5" 
+                    className="w-12 h-12 rounded-lg object-contain bg-white border border-border/50" 
                   />
                   <div>
-                    <h3 className="font-bold text-foreground flex items-center gap-2">
+                    <h3 className="font-bold text-[#333] flex items-center gap-2">
                       {p.name} 
-                      {p.featured && <span className="text-[9px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-black uppercase">Featured</span>}
-                      {p.admin_note && <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded font-bold">Alert Badge Active</span>}
+                      {p.featured && <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded font-black uppercase border border-amber-200">Featured</span>}
+                      {p.admin_note && <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold border border-primary/20">Alert Badge Active</span>}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-0.5 font-bold">₹{p.price}</p>
                   </div>
@@ -647,13 +761,13 @@ const AdminDashboard = () => {
                       startEdit(p);
                       setIsProductModalOpen(true);
                     }} 
-                    className="px-3.5 py-1.5 bg-black/5 border border-border hover:bg-amber-500 hover:text-black text-foreground rounded-lg transition-all text-xs font-bold"
+                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                   >
                     Edit Item
                   </button>
                   <button 
                     onClick={() => handleDelete(p.id)} 
-                    className="px-3.5 py-1.5 bg-black/5 border border-border hover:bg-destructive hover:text-foreground rounded-lg transition-all text-xs font-bold text-foreground"
+                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-destructive hover:text-white text-destructive rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                   >
                     Delete
                   </button>
@@ -666,12 +780,12 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-
+ 
       {activeTab === 'orders' && (
-        <div className="glassmorphism p-6 rounded-3xl overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
+        <div className="bg-white p-6 rounded-3xl border border-border/50 shadow-sm overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Fulfillment Control</h2>
+              <h2 className="text-2xl font-bold font-serif text-[#333]">Fulfillment Control</h2>
               <p className="text-xs text-muted-foreground mt-0.5 font-medium">Manage, inspect, seal, and dispatch fresh Godavari confections.</p>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -680,7 +794,7 @@ const AdminDashboard = () => {
               </div>
               <button 
                 onClick={exportOrdersToCSV}
-                className="bg-black/5 hover:bg-black/10 border border-border text-foreground font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,255,255,0.03)]"
+                className="bg-white hover:bg-neutral-50 border border-border text-muted-foreground hover:text-[#333] font-bold text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 flex items-center gap-1.5 shadow-sm active:scale-98 cursor-pointer"
               >
                 📤 Export Orders CSV
               </button>
@@ -705,7 +819,7 @@ const AdminDashboard = () => {
                   const custName = addr.firstName ? `${addr.firstName} ${addr.lastName}` : 'Guest Checkout';
                   
                   return (
-                    <tr key={order.id} className="border-b border-white/5 hover:bg-black/5 transition-colors">
+                    <tr key={order.id} className="border-b border-border/60 hover:bg-neutral-50/50 transition-colors">
                       <td className="py-4 font-mono text-xs text-primary font-bold">
                         #{order.id.split('-')[0].toUpperCase()}
                       </td>
@@ -714,14 +828,14 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-4">
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-foreground">{custName}</span>
+                          <span className="text-xs font-bold text-[#333]">{custName}</span>
                           <span className="text-[10px] text-muted-foreground">{order.users?.email || 'N/A'}</span>
                         </div>
                       </td>
                       <td className="py-4 text-xs text-muted-foreground">
                         {order.order_items?.map((item, i) => (
                           <div key={i} className="flex gap-1.5 items-center my-0.5">
-                            <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-black">
+                            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black border border-primary/20">
                               {item.quantity}x
                             </span>
                             <span>{item.products?.name}</span>
@@ -730,8 +844,8 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-4">
                         <div className="flex flex-col">
-                          <span className="text-xs font-black text-foreground">₹{order.total_amount}</span>
-                          <span className="text-[9px] text-green-400 font-bold font-mono">Paid / COD Pending</span>
+                          <span className="text-xs font-black text-[#333]">₹{order.total_amount}</span>
+                          <span className="text-[9px] text-emerald-600 font-bold font-mono">Paid / COD Pending</span>
                         </div>
                       </td>
                       <td className="py-4">
@@ -741,7 +855,7 @@ const AdminDashboard = () => {
                             admin_note: order.admin_note || '' 
                           };
                           const hasChanges = orderEdits[order.id] !== undefined;
-
+ 
                           return (
                             <div className="flex flex-col gap-2 items-center">
                               <div className="flex gap-2 w-full justify-center">
@@ -751,7 +865,7 @@ const AdminDashboard = () => {
                                     ...orderEdits,
                                     [order.id]: { ...draft, status: e.target.value }
                                   })}
-                                  className={`bg-background text-xs rounded-lg px-2.5 py-1 border focus:outline-none ${
+                                  className={`bg-white text-xs rounded-lg px-2.5 py-1 border focus:outline-none ${
                                     draft.status === 'delivered' ? 'border-green-500 text-green-500' :
                                     draft.status === 'processing' ? 'border-yellow-500 text-yellow-500' :
                                     draft.status === 'cancelled' ? 'border-destructive text-destructive' :
@@ -764,37 +878,37 @@ const AdminDashboard = () => {
                                   <option value="delivered">Delivered</option>
                                   <option value="cancelled">Cancelled</option>
                                 </select>
-
+ 
                                 <button 
                                   onClick={() => setSelectedFulfillmentOrder(order)}
-                                  className="flex items-center gap-1 bg-black/5 border border-border hover:bg-black/5 text-foreground font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                  className="flex items-center gap-1 bg-white border border-border hover:bg-neutral-50 text-muted-foreground hover:text-[#333] font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
                                 >
                                   📋 Docket
                                 </button>
-
+ 
                                 <button 
                                   onClick={() => window.open('/print/packing-slip/' + order.id, '_blank')}
-                                  className="flex items-center gap-1 bg-black/5 border border-border hover:bg-amber-500 hover:text-black text-foreground font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                  className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                                 >
                                   📦 Slip
                                 </button>
-
+ 
                                 <button 
                                   onClick={() => window.open('/print/invoice/' + order.id, '_blank')}
-                                  className="flex items-center gap-1 bg-black/5 border border-border hover:bg-amber-500 hover:text-black text-foreground font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                  className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                                 >
                                   🧾 Invoice
                                 </button>
-
+ 
                                 <button 
                                   onClick={() => handleDeleteOrder(order.id)}
-                                  className="flex items-center gap-1 bg-black/5 border border-border hover:bg-destructive hover:text-foreground text-destructive font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
+                                  className="flex items-center gap-1 bg-white border border-border hover:bg-destructive hover:text-white text-destructive font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
                                   title="Delete Order"
                                 >
                                   🗑️ Delete
                                 </button>
                               </div>
-
+ 
                               <input 
                                 type="text" 
                                 placeholder="Add packaging instructions / dispatch note..."
@@ -803,13 +917,13 @@ const AdminDashboard = () => {
                                   ...orderEdits,
                                   [order.id]: { ...draft, admin_note: e.target.value }
                                 })}
-                                className="bg-primary/5 border border-primary/20 text-primary text-[10px] rounded-lg px-3 py-1.5 focus:outline-none placeholder:text-primary/30 w-full"
+                                className="bg-[#fafafa] border border-border text-[#333] text-[10px] rounded-lg px-3 py-1.5 focus:outline-none placeholder:text-muted-foreground/50 w-full focus:border-primary"
                               />
-
+ 
                               {hasChanges && (
                                 <button 
                                   onClick={() => handleSaveOrderChanges(order.id)} 
-                                  className="bg-primary hover:bg-primary/90 text-foreground text-[10px] font-bold py-1 px-3 rounded-lg hover:neon-glow transition-all w-full"
+                                  className="bg-primary hover:bg-primary/95 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-all w-full shadow-sm cursor-pointer"
                                 >
                                   Save Fulfillment Status
                                 </button>
@@ -829,12 +943,12 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-
+ 
       {activeTab === 'announcements' && (
-        <div className="glassmorphism p-6 rounded-3xl overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
+        <div className="bg-white p-6 rounded-3xl border border-border/50 shadow-sm overflow-hidden flex flex-col min-h-[70vh] animate-fade-in">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Flash Update Alerts</h2>
+              <h2 className="text-2xl font-bold font-serif text-[#333]">Flash Update Alerts</h2>
               <p className="text-xs text-muted-foreground mt-0.5 font-medium">Publish or edit flash headers visible to all store visitors.</p>
             </div>
             <button 
@@ -843,29 +957,29 @@ const AdminDashboard = () => {
                 setNewAnn({ text: '', type: 'info', is_active: true });
                 setIsAnnModalOpen(true);
               }}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs px-4 py-2 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-102"
+              className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-[0_4px_12px_rgba(186,36,42,0.15)] hover:scale-102 active:scale-98 cursor-pointer"
             >
               + Create Flash Update
             </button>
           </div>
-
+ 
           <div className="overflow-y-auto pr-2 flex flex-col gap-4 flex-1">
             {announcements.map(ann => (
               <div 
                 key={ann.id} 
                 className={`flex flex-col md:flex-row md:items-center justify-between p-5 border rounded-2xl transition-all gap-4 ${
                   ann.is_active 
-                    ? 'bg-background/80 border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.05)]' 
-                    : 'bg-background/20 border-white/5 opacity-60'
+                    ? 'bg-[#fafafa] border-primary/30 shadow-sm' 
+                    : 'bg-neutral-50/50 border-border/60 opacity-60'
                 }`}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full ${
-                      ann.type === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
-                      ann.type === 'warning' ? 'bg-amber-500/20 text-amber-400' :
-                      ann.type === 'critical' ? 'bg-red-500/20 text-red-400' :
-                      'bg-cyan-500/20 text-cyan-400'
+                      ann.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      ann.type === 'warning' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      ann.type === 'critical' ? 'bg-red-50 text-red-700 border border-red-200' :
+                      'bg-cyan-50 text-cyan-700 border border-cyan-200'
                     }`}>
                       {ann.type}
                     </span>
@@ -873,7 +987,7 @@ const AdminDashboard = () => {
                       {new Date(ann.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="font-mono text-sm leading-relaxed text-foreground">{ann.text}</p>
+                  <p className="text-sm font-medium leading-relaxed text-[#333]">{ann.text}</p>
                 </div>
                 
                 <div className="flex items-center gap-4 self-end md:self-center">
@@ -884,7 +998,7 @@ const AdminDashboard = () => {
                       checked={ann.is_active} 
                       onChange={() => handleAnnToggle(ann.id, ann.is_active)} 
                     />
-                    <div className="w-11 h-6 bg-black/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                   
                   <button 
@@ -893,13 +1007,13 @@ const AdminDashboard = () => {
                       setNewAnn({ text: ann.text, type: ann.type, is_active: ann.is_active });
                       setIsAnnModalOpen(true);
                     }}
-                    className="px-3.5 py-1.5 bg-black/5 border border-border hover:bg-amber-500 hover:text-black text-foreground rounded-lg transition-all text-xs font-bold"
+                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                   >
                     Edit Update
                   </button>
                   <button 
                     onClick={() => handleAnnDelete(ann.id)} 
-                    className="px-3.5 py-1.5 bg-black/5 border border-border hover:bg-destructive hover:text-foreground text-foreground rounded-lg transition-all text-xs font-bold"
+                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-destructive hover:text-white text-destructive rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
                   >
                     Delete
                   </button>
@@ -907,46 +1021,46 @@ const AdminDashboard = () => {
               </div>
             ))}
             {announcements.length === 0 && (
-              <p className="text-center py-8 text-muted-foreground">No announcements created yet.</p>
+              <p className="text-center py-8 text-muted-foreground text-sm font-medium">No announcements created yet.</p>
             )}
           </div>
         </div>
       )}
-
+ 
       {activeTab === 'coupons' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
           {/* Create Coupon Form */}
-          <div className="glassmorphism p-6 rounded-3xl h-fit">
-            <h2 className="text-2xl font-bold mb-6">Create Coupon</h2>
-            {couponStatus && <div className="bg-primary/20 text-primary p-3 rounded-lg mb-4 text-sm">{couponStatus}</div>}
+          <div className="bg-white p-6 rounded-3xl border border-border/50 shadow-sm h-fit">
+            <h2 className="text-2xl font-bold font-serif text-[#333] mb-6">Create Coupon</h2>
+            {couponStatus && <div className="bg-primary/10 text-primary p-3 rounded-lg mb-4 text-sm font-medium border border-primary/20">{couponStatus}</div>}
             
             <form onSubmit={handleCouponSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-muted-foreground">Promo Code</label>
+                <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Promo Code</label>
                 <input 
                   type="text" 
                   placeholder="e.g. SWEET20" 
                   value={newCoupon.code} 
                   onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value })} 
                   required 
-                  className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm uppercase font-mono font-bold"
+                  className="bg-[#fafafa] border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm uppercase font-mono font-bold text-[#333]"
                 />
               </div>
-
+ 
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-muted-foreground">Discount Type</label>
+                <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Discount Type</label>
                 <select 
                   value={newCoupon.discount_type} 
                   onChange={(e) => setNewCoupon({ ...newCoupon, discount_type: e.target.value })}
-                  className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm"
+                  className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm text-[#333]"
                 >
                   <option value="percentage">Percentage (%)</option>
                   <option value="flat">Flat Amount (₹)</option>
                 </select>
               </div>
-
+ 
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-muted-foreground">Discount Value</label>
+                <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Discount Value</label>
                 <input 
                   type="number" 
                   step="0.01" 
@@ -954,23 +1068,23 @@ const AdminDashboard = () => {
                   value={newCoupon.discount_value} 
                   onChange={(e) => setNewCoupon({ ...newCoupon, discount_value: e.target.value })} 
                   required 
-                  className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm font-mono"
+                  className="bg-[#fafafa] border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm font-mono text-[#333]"
                 />
               </div>
-
+ 
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-muted-foreground">Minimum Order Value (₹)</label>
+                <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Minimum Order Value (₹)</label>
                 <input 
                   type="number" 
                   step="0.01" 
                   placeholder="e.g. 500" 
                   value={newCoupon.min_order_value} 
                   onChange={(e) => setNewCoupon({ ...newCoupon, min_order_value: e.target.value })} 
-                  className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm font-mono"
+                  className="bg-[#fafafa] border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-sm font-mono text-[#333]"
                 />
               </div>
               
-              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer mt-2">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer mt-2 font-semibold">
                 <input 
                   type="checkbox" 
                   checked={newCoupon.is_active} 
@@ -980,23 +1094,23 @@ const AdminDashboard = () => {
                 Make Active Immediately
               </label>
               
-              <button type="submit" className="bg-primary text-foreground font-bold py-3 rounded-xl hover:bg-primary/90 transition-all mt-2 hover:neon-glow">
+              <button type="submit" className="bg-primary hover:bg-primary/95 text-white font-bold py-3.5 rounded-xl transition-all mt-2 shadow-[0_4px_12px_rgba(186,36,42,0.15)] active:scale-98 cursor-pointer">
                 Create Coupon
               </button>
             </form>
           </div>
-
+ 
           {/* Coupons List */}
-          <div className="lg:col-span-2 glassmorphism p-6 rounded-3xl overflow-hidden flex flex-col h-[80vh]">
-            <h2 className="text-2xl font-bold mb-6">Active Coupons</h2>
+          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-border/50 shadow-sm overflow-hidden flex flex-col h-[80vh]">
+            <h2 className="text-2xl font-bold font-serif text-[#333] mb-6">Active Coupons</h2>
             <div className="overflow-y-auto pr-2 flex flex-col gap-4 flex-1">
               {coupons.map(coupon => (
                 <div 
                   key={coupon.code} 
                   className={`flex flex-col md:flex-row md:items-center justify-between p-5 border rounded-2xl transition-all gap-4 ${
                     coupon.is_active 
-                      ? 'bg-background/80 border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.05)]' 
-                      : 'bg-background/20 border-white/5 opacity-60'
+                      ? 'bg-[#fafafa] border-primary/30 shadow-sm' 
+                      : 'bg-neutral-50/50 border-border/60 opacity-60'
                   }`}
                 >
                   <div className="flex-1">
@@ -1049,87 +1163,87 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'settings' && (
-        <div className="glassmorphism p-8 rounded-3xl max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6">Store & Payment Settings</h2>
-          {settingsStatus && <div className="bg-primary/20 text-primary p-3 rounded-lg mb-6 text-sm">{settingsStatus}</div>}
+        <div className="bg-white p-8 rounded-3xl border border-border/50 shadow-sm max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold font-serif text-[#333] mb-6">Store & Payment Settings</h2>
+          {settingsStatus && <div className="bg-primary/10 text-primary p-3 rounded-lg mb-6 text-sm font-semibold border border-primary/20">{settingsStatus}</div>}
           
           <form onSubmit={handleSettingsSubmit} className="flex flex-col gap-8">
             {/* Shipping Settings */}
-            <div className="flex flex-col gap-4 p-4 bg-background/80 border border-border rounded-xl">
-              <h3 className="font-bold text-lg">Shipping Rules</h3>
+            <div className="flex flex-col gap-4 p-4 bg-[#fafafa] border border-border/60 rounded-xl">
+              <h3 className="font-bold text-lg text-[#333]">Shipping Rules</h3>
               <p className="text-sm text-muted-foreground">Configure shipping fees and free delivery thresholds.</p>
               
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs text-muted-foreground">Flat Shipping Fee (₹)</label>
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Flat Shipping Fee (₹)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     value={settings.shipping_fee !== undefined ? settings.shipping_fee : 50.00} 
                     onChange={(e) => setSettings({ ...settings, shipping_fee: parseFloat(e.target.value) || 0 })}
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full text-[#333] font-medium" 
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs text-muted-foreground">Free Shipping Threshold (₹)</label>
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Free Shipping Threshold (₹)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     value={settings.free_shipping_threshold !== undefined ? settings.free_shipping_threshold : 999.00} 
                     onChange={(e) => setSettings({ ...settings, free_shipping_threshold: parseFloat(e.target.value) || 0 })}
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full text-[#333] font-medium" 
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-background/80 border border-border rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-[#fafafa] border border-border/60 rounded-xl">
               <div>
-                <h3 className="font-bold text-lg">Cash on Delivery (COD)</h3>
+                <h3 className="font-bold text-lg text-[#333]">Cash on Delivery (COD)</h3>
                 <p className="text-sm text-muted-foreground">Allow customers to pay when their order is delivered.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" checked={settings.cod_enabled} onChange={(e) => setSettings({ ...settings, cod_enabled: e.target.checked })} />
-                <div className="w-14 h-7 bg-black/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
 
-            <div className="flex flex-col gap-4 p-4 bg-background/80 border border-border rounded-xl">
+            <div className="flex flex-col gap-4 p-4 bg-[#fafafa] border border-border/60 rounded-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-lg">Partial Payment (Layaway)</h3>
+                  <h3 className="font-bold text-lg text-[#333]">Partial Payment (Layaway)</h3>
                   <p className="text-sm text-muted-foreground">Allow customers to pay a percentage upfront and the rest later.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" checked={settings.partial_payment_enabled} onChange={(e) => setSettings({ ...settings, partial_payment_enabled: e.target.checked })} />
-                  <div className="w-14 h-7 bg-black/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
               
               {settings.partial_payment_enabled && (
                 <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">Upfront Percentage (%)</label>
+                  <label className="text-sm text-muted-foreground font-bold uppercase tracking-wide">Upfront Percentage (%)</label>
                   <input 
                     type="number" 
                     min="1" 
                     max="99" 
                     value={settings.partial_payment_percent} 
                     onChange={(e) => setSettings({ ...settings, partial_payment_percent: parseInt(e.target.value) })}
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full md:w-1/3" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary w-full md:w-1/3 text-[#333] font-medium" 
                   />
                 </div>
               )}
             </div>
 
             {/* Homepage Hero Customization */}
-            <div className="flex flex-col gap-4 p-4 bg-background/80 border border-border rounded-xl">
+            <div className="flex flex-col gap-4 p-4 bg-[#fafafa] border border-border/60 rounded-xl">
               <h3 className="font-bold text-lg text-primary">Homepage Hero Showcase</h3>
               <p className="text-sm text-muted-foreground">Customize the main hero cover picture or set up a looping multi-image carousel.</p>
 
               {/* Single Hero Image Upload */}
               <div className="flex flex-col gap-2 mt-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs text-muted-foreground font-semibold">Hero Background / Main Image</label>
+                  <label className="text-xs text-muted-foreground font-bold uppercase tracking-wide">Hero Background / Main Image</label>
                   <button 
                     type="button"
                     onClick={() => openAssetLibrary((url) => setSettings(prev => ({ ...prev, hero_image_url: url })))}
@@ -1146,7 +1260,7 @@ const AdminDashboard = () => {
                       className="w-16 h-16 rounded-xl object-cover border border-border"
                     />
                   )}
-                  <label className="flex-1 flex items-center justify-center h-16 border border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer bg-black/5 transition-all">
+                  <label className="flex-1 flex items-center justify-center h-16 border border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer bg-white transition-all">
                     <span className="text-xs text-muted-foreground font-medium hover:text-foreground">Upload New Hero Image</span>
                     <input 
                       type="file" 
@@ -1178,14 +1292,14 @@ const AdminDashboard = () => {
                   value={settings.hero_image_url || ''} 
                   onChange={(e) => setSettings({ ...settings, hero_image_url: e.target.value })}
                   placeholder="Or paste direct cover URL..." 
-                  className="bg-background border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full mt-1"
+                  className="bg-white border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full mt-1 text-[#333]"
                 />
               </div>
 
               {/* Carousel Toggle Switch */}
-              <div className="flex items-center justify-between p-3 bg-black/5 border border-border rounded-xl mt-2">
+              <div className="flex items-center justify-between p-3 bg-white border border-border rounded-xl mt-2">
                 <div>
-                  <h4 className="font-bold text-sm">Enable Multi-Image Carousel Mode</h4>
+                  <h4 className="font-bold text-sm text-[#333]">Enable Multi-Image Carousel Mode</h4>
                   <p className="text-xs text-muted-foreground">If enabled, the hero section will loop through all carousel confections.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1195,7 +1309,7 @@ const AdminDashboard = () => {
                     checked={settings.hero_use_carousel || false} 
                     onChange={(e) => setSettings({ ...settings, hero_use_carousel: e.target.checked })} 
                   />
-                  <div className="w-14 h-7 bg-black/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
 
@@ -1206,7 +1320,7 @@ const AdminDashboard = () => {
                   <p className="text-xs text-muted-foreground">Add slides with gorgeous custom titles, descriptions, and images. They will fade in sync!</p>
 
                   {/* Add Slide Builder form */}
-                  <div className="p-4 bg-background border border-white/5 rounded-2xl flex flex-col gap-3">
+                  <div className="p-4 bg-white border border-border/60 rounded-2xl flex flex-col gap-3">
                     <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Create New Slide</h5>
                     
                     <input 
@@ -1214,7 +1328,7 @@ const AdminDashboard = () => {
                       placeholder="Slide Title / Confection Name" 
                       value={newHeroSlide.title} 
                       onChange={(e) => setNewHeroSlide({ ...newHeroSlide, title: e.target.value })}
-                      className="bg-background/80 border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full"
+                      className="bg-[#fafafa] border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full text-[#333] font-medium"
                     />
 
                     <textarea 
@@ -1222,7 +1336,7 @@ const AdminDashboard = () => {
                       placeholder="Slide Description / Captivating Details" 
                       value={newHeroSlide.description} 
                       onChange={(e) => setNewHeroSlide({ ...newHeroSlide, description: e.target.value })}
-                      className="bg-background/80 border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full"
+                      className="bg-[#fafafa] border border-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary w-full text-[#333] font-medium"
                     />
 
                     <div className="flex flex-col gap-1 flex-1">
@@ -1242,7 +1356,7 @@ const AdminDashboard = () => {
                             <img src={newHeroSlide.image_url} className="w-full h-full object-cover" />
                           </div>
                         ) : (
-                          <label className="flex-1 flex items-center justify-center h-10 border border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer bg-black/5 transition-all text-[11px] text-muted-foreground">
+                          <label className="flex-1 flex items-center justify-center h-10 border border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer bg-[#fafafa] transition-all text-[11px] text-muted-foreground">
                             {slideUploading ? "Uploading..." : "📷 Upload Photo"}
                             <input 
                               type="file" 
@@ -1276,7 +1390,7 @@ const AdminDashboard = () => {
                           placeholder="Or paste image url..." 
                           value={newHeroSlide.image_url} 
                           onChange={(e) => setNewHeroSlide({ ...newHeroSlide, image_url: e.target.value })}
-                          className="bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-[10px] flex-1"
+                          className="bg-white border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-[10px] flex-1 text-[#333]"
                         />
                       </div>
                     </div>
@@ -1293,7 +1407,7 @@ const AdminDashboard = () => {
                         setSettings({ ...settings, hero_slides: updatedSlides });
                         setNewHeroSlide({ title: '', description: '', image_url: '' });
                       }}
-                      className="bg-primary/20 hover:bg-primary text-primary hover:text-foreground font-bold py-2 rounded-xl text-xs transition-all mt-1"
+                      className="bg-primary/10 hover:bg-primary hover:text-white text-primary font-bold py-2.5 rounded-xl text-xs transition-all mt-1 active:scale-98 cursor-pointer"
                     >
                       + Add Slide to Carousel
                     </button>
@@ -1306,10 +1420,10 @@ const AdminDashboard = () => {
                     {Array.isArray(settings.hero_slides) && settings.hero_slides.length > 0 ? (
                       <div className="flex flex-col gap-3">
                         {settings.hero_slides.map((slide, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 bg-black/5 border border-border rounded-xl">
+                          <div key={i} className="flex items-center gap-3 p-3 bg-white border border-border rounded-xl shadow-sm">
                             <img src={slide.image_url} className="w-12 h-12 rounded-lg object-cover border border-border flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-xs truncate text-foreground">{slide.title}</h4>
+                              <h4 className="font-bold text-xs truncate text-[#333]">{slide.title}</h4>
                               <p className="text-[10px] text-muted-foreground line-clamp-1">{slide.description}</p>
                             </div>
                             <button 
@@ -1318,7 +1432,7 @@ const AdminDashboard = () => {
                                 const updated = settings.hero_slides.filter((_, index) => index !== i);
                                 setSettings({ ...settings, hero_slides: updated });
                               }}
-                              className="text-xs text-destructive hover:underline font-bold px-2 py-1"
+                              className="text-xs text-destructive hover:underline font-bold px-2 py-1 cursor-pointer"
                             >
                               Remove
                             </button>
@@ -1334,7 +1448,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Store Packing & Print Settings */}
-            <div className="flex flex-col gap-4 p-4 bg-background/80 border border-border rounded-xl">
+            <div className="flex flex-col gap-4 p-4 bg-[#fafafa] border border-border/60 rounded-xl">
               <h3 className="font-bold text-lg text-primary">Store Packing & Invoice Customization</h3>
               <p className="text-sm text-muted-foreground">Configure the dynamic details printed on customer invoices and admin packaging slips.</p>
 
@@ -1346,7 +1460,7 @@ const AdminDashboard = () => {
                     value={settings.store_name || ''} 
                     onChange={(e) => setSettings({ ...settings, store_name: e.target.value })}
                     placeholder="E.g. Aha Konaseema"
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium" 
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -1356,7 +1470,7 @@ const AdminDashboard = () => {
                     value={settings.courier_partner || ''} 
                     onChange={(e) => setSettings({ ...settings, courier_partner: e.target.value })}
                     placeholder="E.g. Ghee Express Courier"
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium" 
                   />
                 </div>
               </div>
@@ -1368,7 +1482,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setSettings({ ...settings, origin_address: e.target.value })}
                   placeholder="E.g. Ravulapalem, East Godavari District, Andhra Pradesh"
                   rows="2"
-                  className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm leading-relaxed" 
+                  className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm leading-relaxed font-medium" 
                 />
               </div>
 
@@ -1380,7 +1494,7 @@ const AdminDashboard = () => {
                     value={settings.support_email || ''} 
                     onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
                     placeholder="E.g. support@ahakonaseema.com"
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium" 
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -1390,7 +1504,7 @@ const AdminDashboard = () => {
                     value={settings.support_phone || ''} 
                     onChange={(e) => setSettings({ ...settings, support_phone: e.target.value })}
                     placeholder="E.g. +91 888 777 6666"
-                    className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm" 
+                    className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium" 
                   />
                 </div>
               </div>
@@ -1402,13 +1516,13 @@ const AdminDashboard = () => {
                   onChange={(e) => setSettings({ ...settings, guarantee_text: e.target.value })}
                   placeholder="Items separated by bullet '•' will be printed as checkboxes (e.g. Pure Ghee verified • Vacuum leakage protection sealed)"
                   rows="3"
-                  className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm leading-relaxed" 
+                  className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm leading-relaxed font-medium" 
                 />
                 <p className="text-[10px] text-muted-foreground italic">Use the dot symbol '•' (Alt + 0149 / option + 8) to separate bulleted quality seals printed on packing slips.</p>
               </div>
             </div>
             
-            <button type="submit" className="bg-primary text-foreground font-bold py-4 rounded-xl hover:bg-primary/90 transition-all hover:neon-glow">
+            <button type="submit" className="bg-primary hover:bg-primary/95 text-white font-bold py-4 rounded-xl transition-all shadow-[0_4px_12px_rgba(186,36,42,0.15)] active:scale-98 cursor-pointer">
               Save Settings
             </button>
           </form>
@@ -1417,18 +1531,18 @@ const AdminDashboard = () => {
 
       {/* Cloud Asset Library Modal */}
       {isAssetPickerOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glassmorphism w-full max-w-4xl max-h-[85vh] rounded-3xl border border-border p-6 flex flex-col gap-6 shadow-[0_0_50px_rgba(139,92,246,0.2)]">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl border border-border/50 p-6 flex flex-col gap-6 shadow-2xl">
             <div className="flex justify-between items-center pb-4 border-b border-border">
               <div>
-                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <h3 className="text-xl font-bold text-[#333] flex items-center gap-2 font-serif">
                   📁 Cloud Asset Library
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">Select an existing image from your bucket or upload a new one.</p>
               </div>
               <button 
                 onClick={() => setIsAssetPickerOpen(false)}
-                className="text-muted-foreground hover:text-foreground text-lg font-bold p-2"
+                className="text-muted-foreground hover:text-[#333] text-lg font-bold p-2 cursor-pointer"
               >
                 ✕
               </button>
@@ -1450,15 +1564,15 @@ const AdminDashboard = () => {
                         onAssetSelect(img.url);
                         setIsAssetPickerOpen(false);
                       }}
-                      className="group relative cursor-pointer border border-white/5 hover:border-primary/50 bg-black/5 hover:bg-black/5 rounded-2xl p-2 transition-all flex flex-col gap-2 justify-between"
+                      className="group relative cursor-pointer border border-border/60 hover:border-primary/50 bg-[#fafafa] hover:bg-white rounded-2xl p-2 transition-all flex flex-col gap-2 justify-between shadow-sm hover:shadow-md"
                     >
-                      <div className="aspect-square rounded-xl overflow-hidden bg-black/20 relative">
+                      <div className="aspect-square rounded-xl overflow-hidden bg-black/5 relative">
                         <img src={img.url} alt={img.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
                         <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-[10px] bg-primary text-foreground px-2 py-1 rounded-full font-bold uppercase tracking-wider">Select</span>
+                          <span className="text-[10px] bg-primary text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Select</span>
                         </div>
                       </div>
-                      <span className="text-[9px] text-muted-foreground truncate w-full text-center block px-1">{img.name}</span>
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center block px-1 font-medium">{img.name}</span>
                     </div>
                   ))}
                 </div>
@@ -1472,7 +1586,7 @@ const AdminDashboard = () => {
 
             <div className="pt-4 border-t border-border flex flex-col sm:flex-row justify-between gap-4 items-center">
               {/* Upload inside Picker */}
-              <label className="bg-primary/20 hover:bg-primary text-primary hover:text-foreground px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer">
+              <label className="bg-primary/10 hover:bg-primary text-primary hover:text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer active:scale-98">
                 Upload custom new image
                 <input 
                   type="file" 
@@ -1503,7 +1617,7 @@ const AdminDashboard = () => {
 
               <button 
                 onClick={() => setIsAssetPickerOpen(false)}
-                className="px-6 py-2.5 rounded-full glassmorphism text-xs font-bold hover:bg-black/5 transition-all"
+                className="px-6 py-2.5 rounded-full border border-border text-[#333] hover:bg-[#fafafa] text-xs font-bold transition-all cursor-pointer"
               >
                 Close Library
               </button>
@@ -1574,11 +1688,11 @@ const AdminDashboard = () => {
             {/* Backdrop Closer */}
             <div className="absolute inset-0" onClick={() => setSelectedFulfillmentOrder(null)}></div>
             
-            <div className="relative w-full max-w-2xl bg-[#121214] border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-[0_0_50px_rgba(0,0,0,0.85)]">
+            <div className="relative w-full max-w-2xl bg-white border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-2xl">
               {/* Action Bar (No Print) */}
               <div className="flex justify-between items-center no-print border-b border-border pb-4">
                 <div>
-                  <h3 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600 font-sans tracking-tight">
+                  <h3 className="text-xl font-bold font-serif text-[#333] tracking-tight">
                     Fulfillment Docket
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5 font-medium">{printStoreName} Logistics Manager</p>
@@ -1586,19 +1700,19 @@ const AdminDashboard = () => {
                 <div className="flex gap-2">
                   <button 
                     onClick={() => window.open('/print/packing-slip/' + selectedFulfillmentOrder.id, '_blank')}
-                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                    className="bg-primary hover:bg-primary/95 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all hover:scale-102 shadow-sm cursor-pointer"
                   >
                     🖨️ Packing Slip
                   </button>
                   <button 
                     onClick={() => window.open('/print/invoice/' + selectedFulfillmentOrder.id, '_blank')}
-                    className="bg-black/5 hover:bg-black/10 border border-border text-foreground font-bold text-xs px-4 py-2 rounded-xl transition-all"
+                    className="bg-[#fafafa] hover:bg-black/5 border border-border text-[#333] font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
                   >
                     🧾 Customer Invoice
                   </button>
                   <button 
                     onClick={() => setSelectedFulfillmentOrder(null)}
-                    className="bg-black/5 hover:bg-black/5 border border-border text-foreground font-bold text-xs px-4 py-2 rounded-xl transition-all"
+                    className="bg-[#fafafa] hover:bg-black/5 border border-border text-[#333] font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
                   >
                     Close
                   </button>
@@ -1606,18 +1720,18 @@ const AdminDashboard = () => {
               </div>
 
               {/* Print Area */}
-              <div id="packing-slip-print-area" className="flex flex-col gap-6 bg-black/5 text-foreground rounded-2xl p-6 border border-white/5 print:bg-white print:text-black print:border-none">
+              <div id="packing-slip-print-area" className="flex flex-col gap-6 bg-[#fafafa] text-[#333] rounded-2xl p-6 border border-border print:bg-white print:text-black print:border-none">
                 
                 {/* Slip Header */}
                 <div className="flex justify-between items-start border-b border-border print:border-black/20 pb-6">
                   <div>
-                    <h2 className="text-2xl font-black text-amber-500 print:text-black font-sans tracking-tight">
+                    <h2 className="text-2xl font-black text-primary font-serif tracking-tight">
                       {printStoreName.toUpperCase()}
                     </h2>
                     <p className="text-[10px] text-muted-foreground print:text-black/60 uppercase font-black tracking-widest mt-1">Sweets & Savories Fulfillment Slip</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-mono font-bold text-foreground print:text-black">
+                    <span className="text-xs font-mono font-bold text-[#333] print:text-black">
                       ORDER ID: #{selectedFulfillmentOrder.id.toUpperCase()}
                     </span>
                     <p className="text-[10px] text-muted-foreground print:text-black/60 mt-1">
@@ -1629,9 +1743,9 @@ const AdminDashboard = () => {
                 {/* Shipping Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-border print:border-black/20 text-xs">
                   <div>
-                    <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Ship To Address</h4>
+                    <h4 className="font-bold text-primary print:text-black uppercase tracking-wider mb-2 text-[10px]">Ship To Address</h4>
                     <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
-                      <span className="font-black text-foreground print:text-black text-sm">
+                      <span className="font-bold text-[#333] print:text-black text-sm">
                         {selectedFulfillmentOrder.shipping_address?.firstName} {selectedFulfillmentOrder.shipping_address?.lastName}
                       </span>
                       <span>{selectedFulfillmentOrder.shipping_address?.address}</span>
@@ -1640,7 +1754,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider mb-2 text-[10px]">Logistics Info</h4>
+                    <h4 className="font-bold text-primary print:text-black uppercase tracking-wider mb-2 text-[10px]">Logistics Info</h4>
                     <div className="flex flex-col gap-1 text-muted-foreground print:text-black/80 font-medium">
                       <span><strong>Carrier:</strong> {printCourierPartner}</span>
                       <span><strong>Origin:</strong> {printOriginAddress}</span>
@@ -1652,7 +1766,7 @@ const AdminDashboard = () => {
 
                 {/* Items List Table */}
                 <div className="flex flex-col gap-3">
-                  <h4 className="font-black text-amber-500 print:text-black uppercase tracking-wider text-[10px]">Order Details</h4>
+                  <h4 className="font-bold text-primary print:text-black uppercase tracking-wider text-[10px]">Order Details</h4>
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-border print:border-black/20 text-muted-foreground print:text-black/60 font-bold uppercase tracking-wider text-[10px]">
@@ -1664,14 +1778,14 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody>
                       {selectedFulfillmentOrder.order_items?.map((item, idx) => (
-                        <tr key={idx} className="border-b border-white/5 print:border-black/10 text-muted-foreground print:text-black/80">
-                          <td className="py-2.5 font-bold text-foreground print:text-black">{item.products?.name}</td>
+                        <tr key={idx} className="border-b border-border/40 print:border-black/10 text-muted-foreground print:text-black/80">
+                          <td className="py-2.5 font-bold text-[#333] print:text-black">{item.products?.name}</td>
                           <td className="py-2.5 text-center font-bold">{item.quantity}</td>
                           <td className="py-2.5 text-right">₹{item.price_at_time}</td>
-                          <td className="py-2.5 text-right font-bold text-foreground print:text-black">₹{item.quantity * item.price_at_time}</td>
+                          <td className="py-2.5 text-right font-bold text-[#333] print:text-black">₹{item.quantity * item.price_at_time}</td>
                         </tr>
                       ))}
-                      <tr className="text-foreground print:text-black font-bold">
+                      <tr className="text-[#333] print:text-black font-bold">
                         <td colSpan="3" className="py-4 text-right uppercase font-black text-[10px]">Grand Payment Total</td>
                         <td className="py-4 text-right text-sm text-primary print:text-black font-black">₹{selectedFulfillmentOrder.total_amount}</td>
                       </tr>
@@ -1680,14 +1794,14 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Quality Seal Checklist */}
-                <div className="p-4 bg-black/5 print:bg-black/5 rounded-xl border border-white/5 print:border-black/10 flex flex-col gap-2 mt-2">
-                  <span className="text-[10px] text-amber-500 print:text-black font-black uppercase tracking-widest">
+                <div className="p-4 bg-white print:bg-black/5 rounded-xl border border-border print:border-black/10 flex flex-col gap-2 mt-2">
+                  <span className="text-[10px] text-primary print:text-black font-black uppercase tracking-widest">
                     🛡️ {printStoreName.toUpperCase()} QUALITY GUARANTEE SEAL
                   </span>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] text-muted-foreground print:text-black/80 font-medium">
                     {guaranteeItems.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="accent-amber-500" />
+                        <input type="checkbox" defaultChecked className="accent-primary" />
                         <span>{item}</span>
                       </div>
                     ))}
@@ -1699,39 +1813,38 @@ const AdminDashboard = () => {
         );
       })()}
 
-      {/* Product Add / Edit Modal Overlay */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="absolute inset-0" onClick={() => setIsProductModalOpen(false)}></div>
           
-          <div className="relative w-full max-w-lg bg-[#121214] border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-[0_0_50px_rgba(0,0,0,0.85)] animate-scale-up">
+          <div className="relative w-full max-w-lg bg-white border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-2xl animate-scale-up">
             <div className="flex justify-between items-center border-b border-border pb-4">
-              <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600">
+              <h2 className="text-xl font-bold font-serif text-[#333]">
                 {editingProduct ? 'Edit Confection Product' : 'Add New Confection'}
               </h2>
               <button 
                 onClick={() => setIsProductModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center bg-black/5 border border-border rounded-full hover:bg-black/5 transition-colors text-foreground font-black"
+                className="w-8 h-8 flex items-center justify-center bg-[#fafafa] border border-border rounded-full hover:bg-black/5 transition-colors text-[#333] font-bold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            {status && <div className="bg-primary/20 text-primary p-3 rounded-lg text-sm">{status}</div>}
+            {status && <div className="bg-primary/10 text-primary border border-primary/20 p-3 rounded-lg text-sm font-semibold">{status}</div>}
             
             <form onSubmit={handleProductSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Product Name</label>
-                <input name="name" placeholder="E.g. Ravulapalem Pure Ghee Kajjikayalu" value={formData.name} onChange={handleProductChange} required className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground" />
+                <input name="name" placeholder="E.g. Ravulapalem Pure Ghee Kajjikayalu" value={formData.name} onChange={handleProductChange} required className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] font-medium" />
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Price (₹ INR)</label>
-                <input type="number" step="0.01" name="price" placeholder="E.g. 350.00" value={formData.price} onChange={handleProductChange} required className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground" />
+                <input type="number" step="0.01" name="price" placeholder="E.g. 350.00" value={formData.price} onChange={handleProductChange} required className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] font-medium" />
               </div>
 
               {/* Premium Drag and Drop / Image Upload Section */}
-              <div className="flex flex-col gap-2 bg-background/40 border border-border rounded-2xl p-4">
+              <div className="flex flex-col gap-2 bg-[#fafafa] border border-border rounded-2xl p-4">
                 <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Product Image</label>
                 
                 {formData.image_url ? (
@@ -1745,14 +1858,14 @@ const AdminDashboard = () => {
                       <button 
                         type="button" 
                         onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                        className="bg-destructive text-foreground px-3 py-1 rounded-full hover:scale-110 transition-transform text-xs"
+                        className="bg-destructive text-white px-3 py-1 rounded-full hover:scale-110 transition-transform text-xs cursor-pointer"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer transition-all bg-black/5 group">
+                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border hover:border-primary/50 rounded-xl cursor-pointer transition-all bg-white group">
                     {imageUploading ? (
                       <div className="flex flex-col items-center gap-2">
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -1763,7 +1876,7 @@ const AdminDashboard = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors mb-2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                         </svg>
-                        <span className="text-xs text-foreground font-semibold">Upload sweet photo</span>
+                        <span className="text-xs text-[#333] font-semibold">Upload sweet photo</span>
                         <span className="text-[10px] text-muted-foreground mt-1">Recommended: 800x800px (1:1 Ratio)</span>
                       </div>
                     )}
@@ -1778,13 +1891,13 @@ const AdminDashboard = () => {
                 )}
 
                 {/* Back up URL input for flexibility */}
-                <div className="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">
+                <div className="mt-2 pt-2 border-t border-border flex flex-col gap-1">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-muted-foreground">Or paste direct image URL</span>
                     <button 
                       type="button"
                       onClick={() => openAssetLibrary((url) => setFormData(prev => ({ ...prev, image_url: url })))}
-                      className="text-[10px] text-primary hover:underline font-bold"
+                      className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
                     >
                       📁 Browse Cloud Library
                     </button>
@@ -1794,31 +1907,31 @@ const AdminDashboard = () => {
                     placeholder="https://..." 
                     value={formData.image_url} 
                     onChange={handleProductChange} 
-                    className="bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-xs w-full text-foreground" 
+                    className="bg-white border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary text-xs w-full text-[#333] font-medium" 
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Description</label>
-                <textarea name="description" placeholder="Describe the aroma, Ghee texture, and sweetness profile..." value={formData.description} onChange={handleProductChange} rows="3" className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm"></textarea>
+                <textarea name="description" placeholder="Describe the aroma, Ghee texture, and sweetness profile..." value={formData.description} onChange={handleProductChange} rows="3" className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium"></textarea>
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-muted-foreground font-bold tracking-wider uppercase">Admin Sweet Badge Alert</label>
-                <textarea name="admin_note" placeholder="Admin Note (Shows as a premium banner alert to customers on sweet card, e.g. 'Fresh Kitchen Arrival Today')" value={formData.admin_note} onChange={handleProductChange} rows="2" className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 focus:outline-none focus:border-primary placeholder:text-primary/50 text-primary text-sm font-semibold"></textarea>
+                <textarea name="admin_note" placeholder="Admin Note (Shows as a premium banner alert to customers on sweet card, e.g. 'Fresh Kitchen Arrival Today')" value={formData.admin_note} onChange={handleProductChange} rows="2" className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 focus:outline-none focus:border-primary placeholder:text-primary/40 text-primary text-sm font-semibold"></textarea>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer py-1">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer py-1 font-medium">
                 <input type="checkbox" name="featured" checked={formData.featured} onChange={handleProductChange} className="accent-primary w-4 h-4" />
                 Feature on Homepage Carousel
               </label>
               
               <div className="flex gap-2 mt-2">
-                <button type="submit" className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-102">
+                <button type="submit" className="flex-1 bg-primary hover:bg-primary/95 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(186,36,42,0.15)] hover:scale-102 active:scale-98 cursor-pointer">
                   {editingProduct ? 'Update Confection' : 'Publish to Storefront'}
                 </button>
-                <button type="button" onClick={() => setIsProductModalOpen(false)} className="px-5 bg-black/5 border border-border rounded-xl hover:bg-black/5 transition-all text-xs font-bold text-foreground">
+                <button type="button" onClick={() => setIsProductModalOpen(false)} className="px-5 bg-[#fafafa] border border-border rounded-xl hover:bg-black/5 transition-all text-xs font-bold text-[#333] cursor-pointer">
                   Cancel
                 </button>
               </div>
@@ -1827,25 +1940,24 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Flash Update Add / Edit Modal Overlay */}
       {isAnnModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="absolute inset-0" onClick={() => setIsAnnModalOpen(false)}></div>
           
-          <div className="relative w-full max-w-lg bg-[#121214] border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-[0_0_50px_rgba(0,0,0,0.85)] animate-scale-up">
+          <div className="relative w-full max-w-lg bg-white border border-border rounded-3xl p-6 md:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto z-10 shadow-2xl animate-scale-up">
             <div className="flex justify-between items-center border-b border-border pb-4">
-              <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600">
+              <h2 className="text-xl font-bold font-serif text-[#333]">
                 {editingAnn ? 'Edit Flash Alert' : 'Create Flash Update Alert'}
               </h2>
               <button 
                 onClick={() => setIsAnnModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center bg-black/5 border border-border rounded-full hover:bg-black/5 transition-colors text-foreground font-black"
+                className="w-8 h-8 flex items-center justify-center bg-[#fafafa] border border-border rounded-full hover:bg-black/5 transition-colors text-[#333] font-bold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            {annStatus && <div className="bg-primary/20 text-primary p-3 rounded-lg text-sm">{annStatus}</div>}
+            {annStatus && <div className="bg-primary/10 text-primary border border-primary/20 p-3 rounded-lg text-sm font-semibold">{annStatus}</div>}
             
             <form onSubmit={handleAnnouncementSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
@@ -1857,7 +1969,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setNewAnn({ ...newAnn, text: e.target.value })} 
                   required 
                   rows="3" 
-                  className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm leading-relaxed"
+                  className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm leading-relaxed font-medium"
                 ></textarea>
               </div>
               
@@ -1866,7 +1978,7 @@ const AdminDashboard = () => {
                 <select 
                   value={newAnn.type} 
                   onChange={(e) => setNewAnn({ ...newAnn, type: e.target.value })}
-                  className="bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-foreground text-sm"
+                  className="bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary text-[#333] text-sm font-medium"
                 >
                   <option value="info">Info Alert (Cyan Glow)</option>
                   <option value="success">Success / Promo (Green Glow)</option>
@@ -1875,7 +1987,7 @@ const AdminDashboard = () => {
                 </select>
               </div>
               
-              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer py-1">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer py-1 font-medium">
                 <input 
                   type="checkbox" 
                   checked={newAnn.is_active} 
@@ -1886,10 +1998,10 @@ const AdminDashboard = () => {
               </label>
               
               <div className="flex gap-2 mt-2">
-                <button type="submit" className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-102">
+                <button type="submit" className="flex-1 bg-primary hover:bg-primary/95 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(186,36,42,0.15)] hover:scale-102 active:scale-98 cursor-pointer">
                   {editingAnn ? 'Apply Flash Update Changes' : 'Publish Flash Announcement'}
                 </button>
-                <button type="button" onClick={() => setIsAnnModalOpen(false)} className="px-5 bg-black/5 border border-border rounded-xl hover:bg-black/5 transition-all text-xs font-bold text-foreground">
+                <button type="button" onClick={() => setIsAnnModalOpen(false)} className="px-5 bg-[#fafafa] border border-border rounded-xl hover:bg-black/5 transition-all text-xs font-bold text-[#333] cursor-pointer">
                   Cancel
                 </button>
               </div>
