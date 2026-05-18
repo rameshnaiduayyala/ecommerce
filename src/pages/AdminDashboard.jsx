@@ -376,6 +376,44 @@ const AdminDashboard = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
+      
+      // Send status update email if the order exists, status has changed, and user has email
+      const originalOrder = orders.find(o => o.id === orderId);
+      if (originalOrder && originalOrder.status !== newStatus && originalOrder.users?.email) {
+        try {
+          console.log(`Sending quick status update email to ${originalOrder.users.email}...`);
+          
+          const details = {
+            orderId: orderId,
+            date: originalOrder.created_at,
+            customerName: originalOrder.users?.full_name || (originalOrder.shipping_address?.firstName + ' ' + originalOrder.shipping_address?.lastName) || 'Customer',
+            shippingAddress: `${originalOrder.shipping_address?.address}, ${originalOrder.shipping_address?.city}, ${originalOrder.shipping_address?.postalCode}, ${originalOrder.shipping_address?.country}`,
+            phone: originalOrder.shipping_address?.phone || '',
+            items: originalOrder.order_items.map(item => ({
+              name: item.products?.name,
+              image_url: item.products?.image_url,
+              quantity: item.quantity,
+              price: item.price_at_time
+            })),
+            subtotal: originalOrder.total_amount,
+            discount: 0,
+            shipping: 0,
+            grandTotal: originalOrder.total_amount,
+            paymentMethod: 'Prepaid',
+            origin: window.location.origin
+          };
+
+          await EmailTemplates.sendOrderStatusUpdate(
+            originalOrder.users.email, 
+            details, 
+            newStatus, 
+            originalOrder.admin_note || ''
+          );
+        } catch (emailErr) {
+          console.warn("Failed to send status update email. Status was still updated in DB.", emailErr);
+        }
+      }
+
       loadData();
     } catch (err) {
       console.error(err);
