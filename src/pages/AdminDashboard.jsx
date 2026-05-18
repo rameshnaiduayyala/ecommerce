@@ -4,6 +4,14 @@ import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrd
 import { supabase } from '../supabase/client';
 import { EmailTemplates } from '../notifications/emailService';
 import { SalesTrendChart, OrderStatusChart, ProductDistributionChart } from '../components/AdminCharts';
+import { 
+  useReactTable, 
+  getCoreRowModel, 
+  getPaginationRowModel, 
+  getSortedRowModel, 
+  getFilteredRowModel, 
+  flexRender 
+} from '@tanstack/react-table';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview'); // default to analytical overview
@@ -561,7 +569,283 @@ const AdminDashboard = () => {
         console.error(err);
       }
     }
-  };  return (
+  };
+
+  // TanStack Table states
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 });
+
+  const orderColumns = [
+    {
+      accessorKey: 'id',
+      header: 'Order ID',
+      cell: info => {
+        const id = info.getValue();
+        return <span className="font-mono text-xs text-primary font-bold">#{id.split('-')[0].toUpperCase()}</span>;
+      }
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Date',
+      cell: info => new Date(info.getValue()).toLocaleDateString()
+    },
+    {
+      id: 'customer',
+      header: 'Customer Details',
+      accessorFn: row => {
+        const addr = row.shipping_address || {};
+        return addr.firstName ? `${addr.firstName} ${addr.lastName} ${row.users?.email || ''}` : `Guest Checkout ${row.users?.email || ''}`;
+      },
+      cell: info => {
+        const row = info.row.original;
+        const addr = row.shipping_address || {};
+        const custName = addr.firstName ? `${addr.firstName} ${addr.lastName}` : 'Guest Checkout';
+        return (
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-[#333]">{custName}</span>
+            <span className="text-[10px] text-muted-foreground">{row.users?.email || 'N/A'}</span>
+          </div>
+        );
+      }
+    },
+    {
+      id: 'items',
+      header: 'Ordered Items',
+      accessorFn: row => row.order_items?.map(item => item.products?.name).join(' ') || '',
+      cell: info => {
+        const row = info.row.original;
+        return (
+          <div className="text-xs text-muted-foreground">
+            {row.order_items?.map((item, i) => (
+              <div key={i} className="flex gap-1.5 items-center my-0.5 font-medium">
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black border border-primary/20">
+                  {item.quantity}x
+                </span>
+                <span>{item.products?.name}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'total_amount',
+      header: 'Payment Total',
+      cell: info => (
+        <div className="flex flex-col">
+          <span className="text-xs font-black text-[#333]">₹{info.getValue()}</span>
+          <span className="text-[9px] text-emerald-600 font-bold font-mono">Paid / COD Pending</span>
+        </div>
+      )
+    },
+    {
+      id: 'actions',
+      header: 'Fulfillment Actions',
+      cell: info => {
+        const order = info.row.original;
+        const draft = orderEdits[order.id] || { 
+          status: order.status, 
+          admin_note: order.admin_note || '' 
+        };
+        const hasChanges = orderEdits[order.id] !== undefined;
+
+        return (
+          <div className="flex flex-col gap-2 items-center">
+            <div className="flex gap-2 w-full justify-center flex-wrap">
+              <select 
+                value={draft.status} 
+                onChange={(e) => setOrderEdits({
+                  ...orderEdits,
+                  [order.id]: { ...draft, status: e.target.value }
+                })}
+                className={`bg-white text-xs rounded-lg px-2.5 py-1 border focus:outline-none cursor-pointer ${
+                  draft.status === 'delivered' ? 'border-green-500 text-green-500' :
+                  draft.status === 'processing' ? 'border-yellow-500 text-yellow-500' :
+                  draft.status === 'cancelled' ? 'border-destructive text-destructive' :
+                  'border-border'
+                }`}
+              >
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <button 
+                onClick={() => setSelectedFulfillmentOrder(order)}
+                className="flex items-center gap-1 bg-white border border-border hover:bg-neutral-50 text-muted-foreground hover:text-[#333] font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
+              >
+                📋 Docket
+              </button>
+
+              <button 
+                onClick={() => window.open('/print/packing-slip/' + order.id, '_blank')}
+                className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
+              >
+                📦 Slip
+              </button>
+
+              <button 
+                onClick={() => window.open('/print/invoice/' + order.id, '_blank')}
+                className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
+              >
+                🧾 Invoice
+              </button>
+
+              <button 
+                onClick={() => handleDeleteOrder(order.id)}
+                className="flex items-center gap-1 bg-white border border-border hover:bg-destructive hover:text-white text-destructive font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
+                title="Delete Order"
+              >
+                🗑️ Delete
+              </button>
+            </div>
+
+            <input 
+              type="text" 
+              placeholder="Add packaging instructions / dispatch note..."
+              value={draft.admin_note}
+              onChange={(e) => setOrderEdits({
+                ...orderEdits,
+                [order.id]: { ...draft, admin_note: e.target.value }
+              })}
+              className="bg-[#fafafa] border border-border text-[#333] text-[10px] rounded-lg px-3 py-1.5 focus:outline-none placeholder:text-muted-foreground/50 w-full focus:border-primary"
+            />
+
+            {hasChanges && (
+              <button 
+                onClick={() => handleSaveOrderChanges(order.id)} 
+                className="bg-primary hover:bg-primary/95 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-all w-full shadow-sm cursor-pointer"
+              >
+                Save Fulfillment Status
+              </button>
+            )}
+          </div>
+        );
+      }
+    }
+  ];
+
+  const orderTable = useReactTable({
+    data: orders,
+    columns: orderColumns,
+    state: {
+      globalFilter,
+      sorting,
+      pagination,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  // TanStack Table states for products
+  const [prodGlobalFilter, setProdGlobalFilter] = useState('');
+  const [prodSorting, setProdSorting] = useState([]);
+  const [prodPagination, setProdPagination] = useState({ pageIndex: 0, pageSize: 5 });
+
+  const productColumns = [
+    {
+      id: 'thumbnail',
+      header: 'Image',
+      cell: info => {
+        const product = info.row.original;
+        return (
+          <img 
+            src={product.image_url || `https://placehold.co/100x100/F5F5F5/BA242A?text=${product.name.charAt(0)}`} 
+            alt={product.name}
+            className="w-12 h-12 rounded-lg object-contain bg-white border border-border/50" 
+          />
+        );
+      }
+    },
+    {
+      accessorKey: 'name',
+      header: 'Confection Product',
+      cell: info => {
+        const product = info.row.original;
+        return (
+          <div>
+            <h3 className="font-bold text-[#333] flex items-center gap-2 flex-wrap">
+              {product.name}
+              {product.featured && <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded font-black uppercase border border-amber-200">Featured</span>}
+              {product.admin_note && <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold border border-primary/20">Alert Badge Active</span>}
+            </h3>
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: 'price',
+      header: 'Price (₹ INR)',
+      cell: info => <span className="font-black text-[#333]">₹{info.getValue()}</span>
+    },
+    {
+      accessorKey: 'admin_note',
+      header: 'Status/Alert Note',
+      cell: info => {
+        const note = info.getValue();
+        return note ? (
+          <span className="text-xs text-muted-foreground italic max-w-[200px] truncate block" title={note}>
+            "{note}"
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/40 font-medium">None</span>
+        );
+      }
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: info => {
+        const product = info.row.original;
+        return (
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                startEdit(product);
+                setIsProductModalOpen(true);
+              }} 
+              className="px-3.5 py-1.5 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
+            >
+              Edit Item
+            </button>
+            <button 
+              onClick={() => handleDelete(product.id)} 
+              className="px-3.5 py-1.5 bg-white border border-border hover:bg-destructive hover:text-white text-destructive rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
+            >
+              Delete
+            </button>
+          </div>
+        );
+      }
+    }
+  ];
+
+  const productTable = useReactTable({
+    data: products,
+    columns: productColumns,
+    state: {
+      globalFilter: prodGlobalFilter,
+      sorting: prodSorting,
+      pagination: prodPagination,
+    },
+    onGlobalFilterChange: setProdGlobalFilter,
+    onSortingChange: setProdSorting,
+    onPaginationChange: setProdPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  return (
     <>
       <div className="container mx-auto px-4 py-12 print:hidden retro-grid-bg min-h-screen relative">
         {/* Executive Welcome & Header */}
@@ -737,46 +1021,108 @@ const AdminDashboard = () => {
             </button>
           </div>
           
-          <div className="overflow-y-auto pr-2 flex flex-col gap-3 flex-1">
-            {products.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-4 bg-[#fafafa] border border-border/60 rounded-xl hover:border-primary/50 transition-all group">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src={p.image_url || `https://placehold.co/100x100/F5F5F5/BA242A?text=${p.name.charAt(0)}`} 
-                    alt={p.name}
-                    className="w-12 h-12 rounded-lg object-contain bg-white border border-border/50" 
-                  />
-                  <div>
-                    <h3 className="font-bold text-[#333] flex items-center gap-2">
-                      {p.name} 
-                      {p.featured && <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded font-black uppercase border border-amber-200">Featured</span>}
-                      {p.admin_note && <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold border border-primary/20">Alert Badge Active</span>}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-0.5 font-bold">₹{p.price}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => {
-                      startEdit(p);
-                      setIsProductModalOpen(true);
-                    }} 
-                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
-                  >
-                    Edit Item
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(p.id)} 
-                    className="px-3.5 py-1.5 bg-white border border-border hover:bg-destructive hover:text-white text-destructive rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-            {products.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground text-sm font-medium">No confections in database. Click + Add Confection to create.</div>
+          {/* TanStack Table Search & Filter Controls for Products */}
+          <div className="mb-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            <input 
+              type="text"
+              value={prodGlobalFilter}
+              onChange={e => setProdGlobalFilter(e.target.value)}
+              placeholder="🔍 Search confections by Name or Status Note..."
+              className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs text-[#333] placeholder:text-muted-foreground/60 w-full md:w-96 focus:outline-none focus:border-primary font-medium shadow-sm"
+            />
+            {prodGlobalFilter && (
+              <button 
+                onClick={() => setProdGlobalFilter('')}
+                className="text-xs text-primary font-bold hover:underline self-end md:self-auto cursor-pointer"
+              >
+                Clear Search
+              </button>
             )}
+          </div>
+
+          <div className="overflow-x-auto border border-border/50 rounded-2xl bg-white shadow-sm flex-1">
+            <table className="w-full text-left">
+              <thead>
+                {productTable.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id} className="border-b border-border bg-[#fafafa]/50 text-muted-foreground text-xs uppercase tracking-wider">
+                    {headerGroup.headers.map(header => (
+                      <th 
+                        key={header.id} 
+                        onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                        className={`p-4 font-bold ${header.column.getCanSort() ? 'cursor-pointer hover:text-primary select-none' : ''}`}
+                      >
+                        <div className="flex items-center gap-1.5 justify-start">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            <span className="text-[10px] opacity-75">
+                              {{
+                                asc: ' 🔼',
+                                desc: ' 🔽',
+                              }[header.column.getIsSorted()] || ' ↕️'}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {productTable.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="border-b border-border/40 hover:bg-neutral-50/50 transition-colors">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="p-4 text-xs font-medium text-[#333]">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                {productTable.getRowModel().rows.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="text-center py-10 text-muted-foreground text-sm font-medium">
+                      No matching confections found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* TanStack Table Pagination Controls for Products */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+            <div className="text-xs text-muted-foreground font-medium">
+              Showing page <span className="text-primary font-black">{productTable.getState().pagination.pageIndex + 1}</span> of <span className="font-black text-[#333]">{productTable.getPageCount() || 1}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-bold">Rows per page:</span>
+              <select 
+                value={productTable.getState().pagination.pageSize}
+                onChange={e => productTable.setPageSize(Number(e.target.value))}
+                className="bg-white border border-border rounded-lg text-xs px-2 py-1 focus:outline-none cursor-pointer"
+              >
+                {[5, 10, 20, 50].map(pageSize => (
+                  <option key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => productTable.previousPage()}
+                  disabled={!productTable.getCanPreviousPage()}
+                  className="px-4 py-2 border border-border bg-white rounded-xl text-xs font-bold text-muted-foreground hover:text-[#333] hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => productTable.nextPage()}
+                  disabled={!productTable.getCanNextPage()}
+                  className="px-4 py-2 border border-border bg-white rounded-xl text-xs font-bold text-muted-foreground hover:text-[#333] hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -800,146 +1146,108 @@ const AdminDashboard = () => {
               </button>
             </div>
           </div>
-          
-          <div className="overflow-x-auto">
+          {/* TanStack Table Search & Filter Controls */}
+          <div className="mb-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            <input 
+              type="text"
+              value={globalFilter}
+              onChange={e => setGlobalFilter(e.target.value)}
+              placeholder="🔍 Search orders by Customer, Email, Products, or ID..."
+              className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs text-[#333] placeholder:text-muted-foreground/60 w-full md:w-96 focus:outline-none focus:border-primary font-medium shadow-sm"
+            />
+            {globalFilter && (
+              <button 
+                onClick={() => setGlobalFilter('')}
+                className="text-xs text-primary font-bold hover:underline self-end md:self-auto cursor-pointer"
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
+
+          <div className="overflow-x-auto border border-border/50 rounded-2xl bg-white shadow-sm">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                  <th className="pb-3 font-semibold">Order ID</th>
-                  <th className="pb-3 font-semibold">Date</th>
-                  <th className="pb-3 font-semibold">Customer Details</th>
-                  <th className="pb-3 font-semibold">Ordered Items</th>
-                  <th className="pb-3 font-semibold">Payment Total</th>
-                  <th className="pb-3 font-semibold text-center">Fulfillment Actions</th>
-                </tr>
+                {orderTable.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id} className="border-b border-border bg-[#fafafa]/50 text-muted-foreground text-xs uppercase tracking-wider">
+                    {headerGroup.headers.map(header => (
+                      <th 
+                        key={header.id} 
+                        onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                        className={`p-4 font-bold ${header.column.getCanSort() ? 'cursor-pointer hover:text-primary select-none' : ''}`}
+                      >
+                        <div className="flex items-center gap-1.5 justify-start">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            <span className="text-[10px] opacity-75">
+                              {{
+                                asc: ' 🔼',
+                                desc: ' 🔽',
+                              }[header.column.getIsSorted()] || ' ↕️'}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {orders.map(order => {
-                  const addr = order.shipping_address || {};
-                  const custName = addr.firstName ? `${addr.firstName} ${addr.lastName}` : 'Guest Checkout';
-                  
-                  return (
-                    <tr key={order.id} className="border-b border-border/60 hover:bg-neutral-50/50 transition-colors">
-                      <td className="py-4 font-mono text-xs text-primary font-bold">
-                        #{order.id.split('-')[0].toUpperCase()}
+                {orderTable.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="border-b border-border/40 hover:bg-neutral-50/50 transition-colors">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="p-4 text-xs font-medium text-[#333]">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
-                      <td className="py-4 text-xs font-medium text-muted-foreground">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-4">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#333]">{custName}</span>
-                          <span className="text-[10px] text-muted-foreground">{order.users?.email || 'N/A'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 text-xs text-muted-foreground">
-                        {order.order_items?.map((item, i) => (
-                          <div key={i} className="flex gap-1.5 items-center my-0.5">
-                            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black border border-primary/20">
-                              {item.quantity}x
-                            </span>
-                            <span>{item.products?.name}</span>
-                          </div>
-                        ))}
-                      </td>
-                      <td className="py-4">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-black text-[#333]">₹{order.total_amount}</span>
-                          <span className="text-[9px] text-emerald-600 font-bold font-mono">Paid / COD Pending</span>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        {(() => {
-                          const draft = orderEdits[order.id] || { 
-                            status: order.status, 
-                            admin_note: order.admin_note || '' 
-                          };
-                          const hasChanges = orderEdits[order.id] !== undefined;
- 
-                          return (
-                            <div className="flex flex-col gap-2 items-center">
-                              <div className="flex gap-2 w-full justify-center">
-                                <select 
-                                  value={draft.status} 
-                                  onChange={(e) => setOrderEdits({
-                                    ...orderEdits,
-                                    [order.id]: { ...draft, status: e.target.value }
-                                  })}
-                                  className={`bg-white text-xs rounded-lg px-2.5 py-1 border focus:outline-none ${
-                                    draft.status === 'delivered' ? 'border-green-500 text-green-500' :
-                                    draft.status === 'processing' ? 'border-yellow-500 text-yellow-500' :
-                                    draft.status === 'cancelled' ? 'border-destructive text-destructive' :
-                                    'border-border'
-                                  }`}
-                                >
-                                  <option value="pending">Pending</option>
-                                  <option value="processing">Processing</option>
-                                  <option value="shipped">Shipped</option>
-                                  <option value="delivered">Delivered</option>
-                                  <option value="cancelled">Cancelled</option>
-                                </select>
- 
-                                <button 
-                                  onClick={() => setSelectedFulfillmentOrder(order)}
-                                  className="flex items-center gap-1 bg-white border border-border hover:bg-neutral-50 text-muted-foreground hover:text-[#333] font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
-                                >
-                                  📋 Docket
-                                </button>
- 
-                                <button 
-                                  onClick={() => window.open('/print/packing-slip/' + order.id, '_blank')}
-                                  className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
-                                >
-                                  📦 Slip
-                                </button>
- 
-                                <button 
-                                  onClick={() => window.open('/print/invoice/' + order.id, '_blank')}
-                                  className="flex items-center gap-1 bg-white border border-border hover:bg-primary hover:text-white text-muted-foreground rounded-lg transition-all text-xs font-bold active:scale-98 cursor-pointer"
-                                >
-                                  🧾 Invoice
-                                </button>
- 
-                                <button 
-                                  onClick={() => handleDeleteOrder(order.id)}
-                                  className="flex items-center gap-1 bg-white border border-border hover:bg-destructive hover:text-white text-destructive font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all active:scale-98 cursor-pointer"
-                                  title="Delete Order"
-                                >
-                                  🗑️ Delete
-                                </button>
-                              </div>
- 
-                              <input 
-                                type="text" 
-                                placeholder="Add packaging instructions / dispatch note..."
-                                value={draft.admin_note}
-                                onChange={(e) => setOrderEdits({
-                                  ...orderEdits,
-                                  [order.id]: { ...draft, admin_note: e.target.value }
-                                })}
-                                className="bg-[#fafafa] border border-border text-[#333] text-[10px] rounded-lg px-3 py-1.5 focus:outline-none placeholder:text-muted-foreground/50 w-full focus:border-primary"
-                              />
- 
-                              {hasChanges && (
-                                <button 
-                                  onClick={() => handleSaveOrderChanges(order.id)} 
-                                  className="bg-primary hover:bg-primary/95 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-all w-full shadow-sm cursor-pointer"
-                                >
-                                  Save Fulfillment Status
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {orders.length === 0 && (
-                  <tr><td colSpan="6" className="text-center py-8 text-muted-foreground text-sm font-medium">No orders found.</td></tr>
+                    ))}
+                  </tr>
+                ))}
+                {orderTable.getRowModel().rows.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="text-center py-10 text-muted-foreground text-sm font-medium">
+                      No matching orders found.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* TanStack Table Pagination Controls */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+            <div className="text-xs text-muted-foreground font-medium">
+              Showing page <span className="text-primary font-black">{orderTable.getState().pagination.pageIndex + 1}</span> of <span className="font-black text-[#333]">{orderTable.getPageCount() || 1}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-bold">Rows per page:</span>
+              <select 
+                value={orderTable.getState().pagination.pageSize}
+                onChange={e => orderTable.setPageSize(Number(e.target.value))}
+                className="bg-white border border-border rounded-lg text-xs px-2 py-1 focus:outline-none cursor-pointer"
+              >
+                {[5, 10, 20, 50].map(pageSize => (
+                  <option key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => orderTable.previousPage()}
+                  disabled={!orderTable.getCanPreviousPage()}
+                  className="px-4 py-2 border border-border bg-white rounded-xl text-xs font-bold text-muted-foreground hover:text-[#333] hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => orderTable.nextPage()}
+                  disabled={!orderTable.getCanNextPage()}
+                  className="px-4 py-2 border border-border bg-white rounded-xl text-xs font-bold text-muted-foreground hover:text-[#333] hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1531,7 +1839,7 @@ const AdminDashboard = () => {
 
       {/* Cloud Asset Library Modal */}
       {isAssetPickerOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl border border-border/50 p-6 flex flex-col gap-6 shadow-2xl">
             <div className="flex justify-between items-center pb-4 border-b border-border">
               <div>

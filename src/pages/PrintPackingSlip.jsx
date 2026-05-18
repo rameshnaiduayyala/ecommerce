@@ -79,8 +79,8 @@ const PrintPackingSlip = () => {
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4 p-4 text-center">
         <h2 className="text-2xl font-black text-destructive">Fulfillment Order Not Found</h2>
         <p className="text-muted-foreground text-sm max-w-md">Verify the order reference ID or return back to the administrative control panel.</p>
-        <button 
-          onClick={() => window.close()} 
+        <button
+          onClick={() => window.close()}
           className="bg-black/5 hover:bg-black/10 border border-border px-6 py-2.5 rounded-full text-xs font-bold transition-all text-foreground mt-2"
         >
           Close Print View
@@ -106,13 +106,13 @@ const PrintPackingSlip = () => {
           <span className="text-sm font-black">Isolated Printing Environment</span>
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => window.print()}
             className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
           >
             🖨️ Print Packing Slip
           </button>
-          <button 
+          <button
             onClick={() => window.close()}
             className="bg-neutral-800 hover:bg-neutral-700 text-foreground font-bold text-xs px-5 py-2.5 rounded-xl border border-neutral-700 transition-all"
           >

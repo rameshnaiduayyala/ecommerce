@@ -13,6 +13,7 @@
     "@fontsource/playfair-display": "^5.2.8",
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
