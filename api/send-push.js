@@ -79,12 +79,15 @@ export default async function handler(req, res) {
       payload.include_external_user_ids = [userId];
     }
 
-    // Call OneSignal REST API
-    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    // Call OneSignal REST API using the modern api.onesignal.com endpoint
+    const isRichKey = restKey.startsWith('os_v2_app_');
+    const authHeader = isRichKey ? `Key ${restKey}` : `Basic ${restKey}`;
+
+    const response = await fetch('https://api.onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Basic ${restKey}`
+        'Authorization': authHeader
       },
       body: JSON.stringify(payload)
     });
