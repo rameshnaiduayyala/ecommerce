@@ -40,9 +40,9 @@ const ProductsPage = () => {
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_20%_50%,_white_1px,_transparent_1px)] bg-[length:30px_30px]"></div>
         <div className="container mx-auto relative z-10">
           <span className="text-xs font-bold tracking-[0.3em] uppercase text-amber-400 mb-3 block">Aha Konaseema</span>
-          <h1 className="text-4xl md:text-5xl font-serif font-black mb-3 leading-tight">All Products</h1>
+          <h1 className="text-4xl md:text-5xl font-serif font-black mb-3 leading-tight">Our Sweet Delicacies</h1>
           <p className="text-white/70 text-sm md:text-base max-w-xl">
-            Discover our complete collection of handcrafted, authentic Godavari confections — made with pure milk ghee.
+            Discover our complete menu of handcrafted, authentic Godavari traditional sweets — made fresh daily with 100% pure milk ghee.
           </p>
         </div>
       </div>

@@ -76,22 +76,22 @@ const HomePage = () => {
   const heroSlides = Array.isArray(settings.hero_slides) && settings.hero_slides.length > 0
     ? settings.hero_slides
     : [
-        {
-          image_url: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=1920',
-          title: 'Authentic Godavari Sweets',
-          description: 'Experience the rich heritage of Konaseema with pure milk ghee confections.',
-        },
-        {
-          image_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=1920',
-          title: 'Premium Quality',
-          description: 'Prepared with utmost hygiene, vacuum sealed to lock in freshness.',
-        },
-        {
-          image_url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=1920',
-          title: 'Festive Delights',
-          description: 'Celebrate your special moments with handcrafted traditional treats.',
-        },
-      ];
+      {
+        image_url: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=1920',
+        title: 'Authentic Godavari Sweets',
+        description: 'Experience the rich heritage of Konaseema with pure milk ghee confections.',
+      },
+      {
+        image_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=1920',
+        title: 'Premium Quality',
+        description: 'Prepared with utmost hygiene, vacuum sealed to lock in freshness.',
+      },
+      {
+        image_url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=1920',
+        title: 'Festive Delights',
+        description: 'Celebrate your special moments with handcrafted traditional treats.',
+      },
+    ];
 
   const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
   const scrollNext = () => emblaApi && emblaApi.scrollNext();
@@ -107,7 +107,7 @@ const HomePage = () => {
   }, [emblaApi]);
 
   return (
-    <div className="flex flex-col pb-20">
+    <div className="flex flex-col">
 
       {/* ── HERO ───────────────────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden bg-[#0f0505]">
@@ -209,11 +209,10 @@ const HomePage = () => {
                     key={i}
                     onClick={() => scrollTo(i)}
                     aria-label={`Go to slide ${i + 1}`}
-                    className={`transition-all duration-300 rounded-full ${
-                      i === selectedIndex
+                    className={`transition-all duration-300 rounded-full ${i === selectedIndex
                         ? 'w-8 h-2 bg-amber-400'
                         : 'w-2 h-2 bg-white/35 hover:bg-white/65'
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -237,15 +236,15 @@ const HomePage = () => {
       </section>
 
       {/* ── TRUST BADGES ──────────────────────────────────────────── */}
-      <section className="bg-gradient-to-r from-primary to-[#85161b] text-white py-5 px-4">
+      <section className="bg-gradient-to-r from-primary via-[#9e1e23] to-[#85161b] text-white py-6 px-4">
         <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/15">
             {TRUST_BADGES.map((b) => (
-              <div key={b.label} className="flex items-center gap-3">
-                <span className="text-2xl shrink-0">{b.icon}</span>
+              <div key={b.label} className="flex items-center gap-3 py-3 md:py-0 md:px-6 first:md:pl-0 last:md:pr-0">
+                <span className="text-2xl shrink-0 drop-shadow-sm">{b.icon}</span>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wider">{b.label}</p>
-                  <p className="text-[10px] text-white/70 font-medium">{b.sub}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em]">{b.label}</p>
+                  <p className="text-[9px] text-white/65 font-medium mt-0.5">{b.sub}</p>
                 </div>
               </div>
             ))}
@@ -288,22 +287,38 @@ const HomePage = () => {
 
       {/* ── SHOP BY CATEGORY ──────────────────────────────────────── */}
       {allCategories.length > 0 && (
-        <section className="container mx-auto px-4 md:px-8 mt-20 mb-6">
-          <div className="mb-8">
-            <span className="text-xs font-black tracking-[0.3em] uppercase text-primary mb-2 block">Collections</span>
-            <h2 className="text-3xl md:text-4xl font-serif font-black text-[#222]">Shop by Category</h2>
+        <section className="container mx-auto px-4 md:px-8 mt-20">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-px w-10 bg-primary"></div>
+                <span className="text-[9px] font-black tracking-[0.4em] uppercase text-primary">Collections</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-serif font-black text-[#222] leading-tight">
+                Shop by<br />
+                <span className="text-primary">Category</span>
+              </h2>
+            </div>
+            <Link to="/categories" className="shrink-0 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold py-2.5 px-7 rounded-full transition-all uppercase tracking-widest text-xs self-start md:self-auto">
+              All Categories
+            </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {allCategories.map((cat) => (
-              <Link
-                key={cat}
-                to={`/categories`}
-                className="group relative bg-gradient-to-br from-[#f9f5f0] to-[#f3ede5] border border-border/40 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center hover:border-primary/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
-              >
-                <span className="text-3xl">🍬</span>
-                <span className="text-sm font-black text-[#222] uppercase tracking-wider group-hover:text-primary transition-colors">{cat}</span>
-              </Link>
-            ))}
+            {allCategories.map((cat, idx) => {
+              const catIcons = ['🍮', '🧆', '🍯', '🫙', '🍛', '🎁', '🍡', '🥮'];
+              const catIcon = catIcons[idx % catIcons.length];
+              return (
+                <Link
+                  key={cat}
+                  to={`/categories`}
+                  className="group relative bg-gradient-to-br from-[#fdf9f5] to-[#f5ede3] border border-border/40 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute bottom-0 left-0 h-0.5 bg-primary w-0 group-hover:w-full transition-all duration-500" />
+                  <span className="text-3xl">{catIcon}</span>
+                  <span className="text-xs font-black text-[#333] uppercase tracking-wider group-hover:text-primary transition-colors leading-snug">{cat}</span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

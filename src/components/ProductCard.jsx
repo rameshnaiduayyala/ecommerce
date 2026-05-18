@@ -46,12 +46,7 @@ const ProductCard = ({ product }) => {
     setTimeout(() => setToastMessage(''), 2800);
   };
 
-  const displayPrice = Number(product.discount_price || product.price);
   const originalPrice = Number(product.price);
-  const hasDiscount = product.discount_price && product.discount_price < product.price;
-  const discountPct = hasDiscount
-    ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100)
-    : 0;
 
   return (
     <div className="group relative bg-white rounded-3xl overflow-hidden border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
@@ -74,13 +69,6 @@ const ProductCard = ({ product }) => {
 
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-        {/* Discount badge */}
-        {hasDiscount && (
-          <span className="absolute top-3 left-3 z-10 bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-            {discountPct}% OFF
-          </span>
-        )}
 
         {/* Wishlist button */}
         <button
@@ -132,13 +120,8 @@ const ProductCard = ({ product }) => {
         {/* Price row */}
         <div className="flex items-baseline gap-2 mt-auto pt-1">
           <span className="text-base font-black text-primary font-serif">
-            ₹{displayPrice.toFixed(2)}
+            ₹{originalPrice.toFixed(2)}
           </span>
-          {hasDiscount && (
-            <span className="text-[11px] text-muted-foreground line-through font-medium">
-              ₹{originalPrice.toFixed(2)}
-            </span>
-          )}
         </div>
 
         {/* Add to cart row */}
