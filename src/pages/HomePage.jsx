@@ -210,8 +210,8 @@ const HomePage = () => {
                     onClick={() => scrollTo(i)}
                     aria-label={`Go to slide ${i + 1}`}
                     className={`transition-all duration-300 rounded-full ${i === selectedIndex
-                        ? 'w-8 h-2 bg-amber-400'
-                        : 'w-2 h-2 bg-white/35 hover:bg-white/65'
+                      ? 'w-8 h-2 bg-amber-400'
+                      : 'w-2 h-2 bg-white/35 hover:bg-white/65'
                       }`}
                   />
                 ))}
@@ -236,8 +236,12 @@ const HomePage = () => {
       </section>
 
       {/* ── TRUST BADGES ──────────────────────────────────────────── */}
-      <section className="bg-gradient-to-r from-primary via-[#9e1e23] to-[#85161b] text-white py-6 px-4">
-        <div className="container mx-auto">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-[#9e1e23] to-black text-white py-6 px-4">
+        {/* Pattern overlay */}
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_20%_50%,_white_1px,_transparent_1px)] bg-[length:30px_30px]"></div>
+        <div className="absolute right-0 top-0 w-60 h-60 bg-amber-400/10 rounded-full blur-[70px] pointer-events-none"></div>
+
+        <div className="container mx-auto relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/15">
             {TRUST_BADGES.map((b) => (
               <div key={b.label} className="flex items-center gap-3 py-3 md:py-0 md:px-6 first:md:pl-0 last:md:pr-0">
@@ -430,7 +434,7 @@ const HomePage = () => {
           <div className="relative z-10 text-center md:text-left">
             <span className="text-[10px] font-black tracking-[0.4em] uppercase text-amber-400 mb-3 block">Limited Time Offer</span>
             <h2 className="text-3xl md:text-4xl font-serif font-black leading-tight mb-3">
-              Free Shipping on<br />Orders Above ₹{settings.free_shipping_threshold || 999}
+              Free Shipping on<br />Orders Above ₹{settings.free_shipping_threshold || 2000}
             </h2>
             <p className="text-white/75 text-sm font-medium max-w-md">
               Order today and experience the premium taste of authentic Godavari ghee sweets delivered right to your doorstep.
