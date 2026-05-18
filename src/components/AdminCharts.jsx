@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label, prefix = '₹' }) => {
 // 1. Sales Trend Area Chart
 export const SalesTrendChart = ({ data = [] }) => {
   return (
-    <div className="w-full h-[320px] bg-white rounded-3xl border border-border/50 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
+    <div className="w-full h-[320px] magic-glow-card glow-hover rounded-3xl border border-border/50 p-5 shadow-sm transition-all flex flex-col gap-4">
       <div>
         <h3 className="text-md font-bold text-[#333] font-serif">Revenue Performance</h3>
         <p className="text-xs text-muted-foreground mt-0.5 font-medium">Daily order sales & revenue trend</p>
@@ -97,7 +97,7 @@ export const OrderStatusChart = ({ data = [] }) => {
   const hasData = data && data.length > 0;
 
   return (
-    <div className="w-full h-[320px] bg-white rounded-3xl border border-border/50 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-2">
+    <div className="w-full h-[320px] magic-glow-card glow-hover rounded-3xl border border-border/50 p-5 shadow-sm transition-all flex flex-col gap-2">
       <div>
         <h3 className="text-md font-bold text-[#333] font-serif">Fulfillment Distribution</h3>
         <p className="text-xs text-muted-foreground mt-0.5 font-medium">Order status breakout metrics</p>
@@ -157,7 +157,7 @@ export const ProductDistributionChart = ({ data = [] }) => {
   const sortedData = hasData ? [...data].sort((a, b) => b.Sales - a.Sales).slice(0, 5) : [];
 
   return (
-    <div className="w-full h-[320px] bg-white rounded-3xl border border-border/50 p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
+    <div className="w-full h-[320px] magic-glow-card glow-hover rounded-3xl border border-border/50 p-5 shadow-sm transition-all flex flex-col gap-4">
       <div>
         <h3 className="text-md font-bold text-[#333] font-serif">Popular Confections</h3>
         <p className="text-xs text-muted-foreground mt-0.5 font-medium">Top selling items by quantity ordered</p>

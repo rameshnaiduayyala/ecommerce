@@ -563,11 +563,11 @@ const AdminDashboard = () => {
     }
   };  return (
     <>
-      <div className="container mx-auto px-4 py-12 print:hidden bg-[#fcfcfc] min-h-screen">
+      <div className="container mx-auto px-4 py-12 print:hidden retro-grid-bg min-h-screen relative">
         {/* Executive Welcome & Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-serif font-black text-primary tracking-tight">
+          <h1 className="text-4xl font-serif font-black shimmer-text tracking-tight pb-1">
             Command Center
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5 font-medium">Welcome back, Administrator. The Godavari kitchens are active and online.</p>
@@ -666,7 +666,7 @@ const AdminDashboard = () => {
  
       {/* Executive Quick Stats Summary Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+        <div className="magic-glow-card glow-hover p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 transition-all duration-300">
           <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             📦
           </div>
@@ -674,7 +674,7 @@ const AdminDashboard = () => {
           <span className="text-xl font-black text-[#333]">{products.length} Products</span>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+        <div className="magic-glow-card glow-hover p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 transition-all duration-300">
           <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             📊
           </div>
@@ -682,7 +682,7 @@ const AdminDashboard = () => {
           <span className="text-xl font-black text-[#333]">{orders.length} Placed</span>
         </div>
  
-        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+        <div className="magic-glow-card glow-hover p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 transition-all duration-300">
           <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             ⚡
           </div>
@@ -692,7 +692,7 @@ const AdminDashboard = () => {
           </span>
         </div>
  
-        <div className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 hover:border-primary/30 transition-all duration-300">
+        <div className="magic-glow-card glow-hover p-5 rounded-2xl border border-border/60 shadow-sm relative overflow-hidden flex flex-col gap-1 transition-all duration-300">
           <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-sm font-black text-primary">
             🎟️
           </div>
