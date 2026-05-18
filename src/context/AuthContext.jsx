@@ -73,7 +73,13 @@ export const AuthProvider = ({ children }) => {
       return data;
     },
     signOut: () => supabase.auth.signOut(),
-    isAdmin
+    isAdmin,
+    refreshUser: async () => {
+      const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+      if (!error && freshUser) {
+        setUser(freshUser);
+      }
+    }
   };
 
   return (

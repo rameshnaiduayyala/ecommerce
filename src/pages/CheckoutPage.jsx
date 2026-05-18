@@ -43,7 +43,26 @@ const CheckoutPage = () => {
       }
     };
     loadSettings();
-  }, []);
+
+    // Auto-populate user shipping details from metadata
+    if (user) {
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || '';
+      const nameParts = fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      setFormData(prev => ({
+        ...prev,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+        address: meta.address || prev.address,
+        city: meta.city || prev.city,
+        postalCode: meta.postalCode || meta.postal_code || prev.postalCode,
+        country: meta.country || prev.country || 'India'
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
