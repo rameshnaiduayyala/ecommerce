@@ -34,10 +34,10 @@ const ProductsPage = () => {
   });
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12 retro-grid-bg min-h-screen relative">
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-bold mb-2">All Products</h1>
+          <h1 className="text-4xl font-serif font-black shimmer-text tracking-tight pb-1 mb-2">All Products</h1>
           <p className="text-muted-foreground">Discover our complete collection of traditional & authentic confections.</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">

@@ -157,7 +157,7 @@ const HomePage = () => {
       {/* Featured Products */}
       <section className="container mx-auto px-4 md:px-8 mt-24 mb-16">
         <div className="flex flex-col items-center mb-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#333] mb-4 relative inline-block">
+          <h2 className="text-3xl md:text-4xl font-serif font-black shimmer-text mb-4 relative inline-block">
             Our Best Sellers
             {/* Floral/Leaf Accent (Placeholder) */}
             <svg className="absolute -top-6 -right-8 w-8 h-8 text-primary opacity-50" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" opacity=".3"/><path d="M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-4h-2.1c-.46-2.28-2.48-4-4.9-4s-4.44 1.72-4.9 4H4v2h2v10h12V9h2V7z"/></svg>

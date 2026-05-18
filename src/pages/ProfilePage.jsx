@@ -170,17 +170,17 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
+    <div className="container mx-auto px-4 py-12 max-w-5xl retro-grid-bg min-h-screen relative">
       {/* Title Header */}
       <div className="mb-10 text-center md:text-left">
-        <h1 className="text-4xl font-serif font-black text-foreground tracking-tight">Account Dashboard</h1>
+        <h1 className="text-4xl font-serif font-black shimmer-text tracking-tight pb-1">Account Dashboard</h1>
         <p className="text-muted-foreground mt-1 text-sm font-medium">Manage your personal profiles, default shipping address, and password credentials.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Side: User Summary card */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          <div className="glassmorphism p-6 rounded-3xl text-center flex flex-col items-center border border-border/50 shadow-sm relative overflow-hidden bg-white">
+          <div className="magic-glow-card glow-hover p-6 rounded-3xl text-center flex flex-col items-center border border-border/50 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary to-amber-500"></div>
             
             <div className="w-24 h-24 rounded-full bg-amber-50 border-4 border-primary/10 flex items-center justify-center text-primary text-3xl font-black font-serif shadow-inner my-4">

@@ -25,10 +25,10 @@ const Navbar = () => {
     <>
       <FlashAnnouncement />
 
-      <header className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+      <header className={`sticky top-0 w-full z-50 transition-all duration-300 backdrop-blur-md ${
         scrolled 
-          ? 'bg-white border-b border-border shadow-sm' 
-          : 'bg-white border-b border-border'
+          ? 'bg-white/80 border-b border-border/60 shadow-sm' 
+          : 'bg-white/95 border-b border-border/30'
       }`}>
         <div className="container mx-auto px-4 md:px-6 h-[88px] flex items-center justify-between">
           
@@ -40,7 +40,7 @@ const Navbar = () => {
               <span className="text-[6px] tracking-[0.2em] uppercase">A Sweet Tradition</span>
             </div>
           </Link>
-
+ 
           {/* Center Links */}
           <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#333]">
             <Link to="/products" className={`hover:text-primary transition-colors flex items-center gap-1 ${isActive('/products') ? 'text-primary' : ''}`}>
@@ -57,7 +57,7 @@ const Navbar = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 opacity-50"><path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>
               </span>
               <div className="absolute top-full right-0 pt-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all">
-                <div className="bg-white border border-border shadow-lg rounded-xl p-3 flex flex-col gap-2 min-w-[180px]">
+                <div className="magic-glow-card glow-hover border border-border shadow-lg rounded-xl p-3 flex flex-col gap-2 min-w-[180px]">
                   {user ? (
                     <>
                       <Link to="/profile" className="text-sm hover:text-primary font-medium px-3 py-2 rounded-md hover:bg-black/5">My Profile</Link>

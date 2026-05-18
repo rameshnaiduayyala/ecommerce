@@ -46,7 +46,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group bg-white rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 relative flex flex-col h-full border border-border/50 hover:border-transparent">
+    <div className="group magic-glow-card glow-hover rounded-3xl overflow-hidden shadow-sm relative flex flex-col h-full border border-border/50">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-8 right-8 z-50 bg-primary text-white font-semibold px-6 py-4 rounded-2xl shadow-lg animate-bounce text-sm">
