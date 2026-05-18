@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getStoreSettings, validateCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
+import { EmailTemplates } from '../notifications/emailService';
 
 const CheckoutPage = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -133,8 +134,23 @@ const CheckoutPage = () => {
         .insert(orderItems);
         
       if (itemsError) throw itemsError;
+
+      // 3. Send Emails (Non-blocking: we catch errors so checkout succeeds even if email fails)
+      try {
+        console.log("Sending transactional emails...");
+        // Send receipt to customer
+        await EmailTemplates.sendOrderConfirmation(user.email, orderData.id, finalAmount);
+        
+        // Send alert to admin (using a fixed admin email for now, ideally fetched from settings)
+        // Note: For Resend testing on free tier, admin email MUST match your verified email!
+        const adminEmail = 'techrammy@gmail.com'; 
+        await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderData.id, finalAmount);
+        console.log("Transactional emails sent successfully");
+      } catch (emailErr) {
+        console.warn("Failed to send transactional emails (likely due to Resend domain verification limits during testing). Order still placed successfully.", emailErr);
+      }
       
-      // 3. Cleanup
+      // 4. Cleanup
       clearCart();
       navigate('/orders');
       

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { addProduct } from '../api/products';
 import { getAdminProducts, updateProduct, deleteProduct, getAllOrders, updateOrderStatus, getStoreSettings, updateStoreSettings, getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, getCoupons, addCoupon, deleteCoupon } from '../api/admin';
 import { supabase } from '../supabase/client';
+import { EmailTemplates } from '../notifications/emailService';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'orders'
@@ -327,6 +328,22 @@ const AdminDashboard = () => {
         
       if (error) throw error;
       
+      // Find the original order to check if status changed and get customer email
+      const originalOrder = orders.find(o => o.id === orderId);
+      if (originalOrder && originalOrder.status !== draft.status && originalOrder.users?.email) {
+        try {
+          console.log(`Sending status update email to ${originalOrder.users.email}...`);
+          await EmailTemplates.sendOrderStatusUpdate(
+            originalOrder.users.email, 
+            orderId, 
+            draft.status, 
+            draft.admin_note
+          );
+        } catch (emailErr) {
+          console.warn("Failed to send status update email. Status was still updated in DB.", emailErr);
+        }
+      }
+
       setSettingsStatus('Order updated successfully!');
       // Remove draft from local state after saving
       const updatedEdits = { ...orderEdits };

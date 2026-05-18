@@ -46,15 +46,28 @@ export const EmailTemplates = {
     return sendEmail({
       to,
       subject: `Order Confirmation #${orderId} - SweetVerse`,
-      html: `<h2>Thank you for your order!</h2><p>Your order <strong>#${orderId}</strong> for <strong>$${amount}</strong> has been confirmed.</p>`
+      html: `<h2>Thank you for your order!</h2><p>Your order <strong>#${orderId}</strong> for <strong>₹${amount}</strong> has been confirmed.</p>`
     });
   },
 
-  sendShippingUpdate: async (to, orderId, trackingLink) => {
+  sendAdminNewOrderAlert: async (adminEmail, orderId, amount) => {
+    return sendEmail({
+      to: adminEmail,
+      subject: `🚨 New Order Alert! #${orderId} - SweetVerse`,
+      html: `<h2>New Order Received!</h2><p>A new order <strong>#${orderId}</strong> for <strong>₹${amount}</strong> has been placed.</p><p>Please check your Admin Dashboard for fulfillment details.</p>`
+    });
+  },
+
+  sendOrderStatusUpdate: async (to, orderId, status, adminNote = '') => {
     return sendEmail({
       to,
-      subject: `Your order #${orderId} has shipped! - SweetVerse`,
-      html: `<h2>Great news!</h2><p>Your order has shipped. <a href="${trackingLink}">Track your package here</a>.</p>`
+      subject: `Your order #${orderId} is now ${status.toUpperCase()} - SweetVerse`,
+      html: `
+        <h2>Order Update</h2>
+        <p>Your order <strong>#${orderId}</strong> status has been updated to: <strong>${status.toUpperCase()}</strong>.</p>
+        ${adminNote ? `<p><strong>Note from our team:</strong> ${adminNote}</p>` : ''}
+        <p>Thank you for shopping with SweetVerse!</p>
+      `
     });
   },
 
