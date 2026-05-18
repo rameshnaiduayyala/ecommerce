@@ -34,18 +34,18 @@ const TestNotificationsPage = () => {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto space-y-8 bg-gray-900 text-white min-h-screen">
+    <div className="p-8 max-w-2xl mx-auto space-y-8 bg-gray-900 text-foreground min-h-screen">
       <h1 className="text-3xl font-bold mb-4">Test Notifications</h1>
       
       {/* Push Notifications Section */}
       <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
         <h2 className="text-xl font-semibold mb-4 text-purple-400">1. Test OneSignal Push</h2>
-        <p className="mb-4 text-gray-300">
+        <p className="mb-4 text-muted-foreground">
           This will prompt the browser for push permissions. You should also see a floating bell icon in the bottom right if OneSignal initialized correctly.
         </p>
         <button 
           onClick={handlePushTest}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow transition"
+          className="bg-purple-600 hover:bg-purple-700 text-foreground px-4 py-2 rounded shadow transition"
         >
           Prompt Push Permission
         </button>
@@ -54,7 +54,7 @@ const TestNotificationsPage = () => {
       {/* Email Section */}
       <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
         <h2 className="text-xl font-semibold mb-4 text-blue-400">2. Test Resend Email</h2>
-        <p className="mb-4 text-gray-300">
+        <p className="mb-4 text-muted-foreground">
           Sends a test Welcome email to the address below.
         </p>
         <div className="flex space-x-4 mb-4">
@@ -63,17 +63,17 @@ const TestNotificationsPage = () => {
             placeholder="your-email@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-gray-900 border border-gray-600 rounded px-3 py-2 flex-grow text-white"
+            className="bg-gray-900 border border-gray-600 rounded px-3 py-2 flex-grow text-foreground"
           />
           <button 
             onClick={handleEmailTest}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition"
+            className="bg-blue-600 hover:bg-blue-700 text-foreground px-4 py-2 rounded shadow transition"
           >
             Send Email
           </button>
         </div>
         {emailStatus && (
-          <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700 text-sm text-gray-300">
+          <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700 text-sm text-muted-foreground">
             {emailStatus}
           </div>
         )}

@@ -22,139 +22,90 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      scrolled 
-        ? 'glassmorphism border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-lg bg-background/80' 
-        : 'bg-transparent'
-    }`}>
+    <>
       <FlashAnnouncement />
-      <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-95 transition-all group">
-          <img 
-            src={logoImg} 
-            alt="Aha Konaseema Logo" 
-            className="w-11 h-11 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] group-hover:scale-105 transition-transform" 
-          />
-          <span className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 font-sans group-hover:drop-shadow-[0_0_10px_rgba(245,158,11,0.2)] transition-all">
-            Aha Konaseema
-          </span>
-        </Link>
-        <nav className="hidden md:flex gap-8 items-center">
-          <Link 
-            to="/products" 
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative py-1 group ${
-              isActive('/products') ? 'text-white' : 'text-muted-foreground hover:text-white'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-amber-500">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
-            <span>Products</span>
-            <span className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300 ${
-              isActive('/products') ? 'w-full' : 'w-0 group-hover:w-full'
-            }`}></span>
+
+      <header className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white border-b border-border shadow-sm' 
+          : 'bg-white border-b border-border'
+      }`}>
+        <div className="container mx-auto px-4 md:px-6 h-[88px] flex items-center justify-between">
+          
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-95 transition-all">
+            <div className="bg-primary text-white rounded-full px-6 py-2 flex flex-col items-center justify-center border-2 border-white shadow-[0_0_0_2px_theme(colors.primary)]">
+              <span className="text-[8px] tracking-widest font-serif italic">Since 1948</span>
+              <span className="text-sm font-black font-serif tracking-tight uppercase">Aha Konaseema</span>
+              <span className="text-[6px] tracking-[0.2em] uppercase">A Sweet Tradition</span>
+            </div>
           </Link>
 
-          <Link 
-            to="/categories" 
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative py-1 group ${
-              isActive('/categories') ? 'text-white' : 'text-muted-foreground hover:text-white'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-amber-500">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V8.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
-            </svg>
-            <span>Categories</span>
-            <span className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300 ${
-              isActive('/categories') ? 'w-full' : 'w-0 group-hover:w-full'
-            }`}></span>
-          </Link>
+          {/* Center Links */}
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#333]">
+            <Link to="/products" className={`hover:text-primary transition-colors flex items-center gap-1 ${isActive('/products') ? 'text-primary' : ''}`}>
+              Sweets
+            </Link>
+            <Link to="/categories" className={`hover:text-primary transition-colors flex items-center gap-1 ${isActive('/categories') ? 'text-primary' : ''}`}>
+              Snacks & More
+            </Link>
+            
+            {/* Account Dropdown */}
+            <div className="relative group">
+              <span className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer">
+                My Account & More
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 opacity-50"><path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>
+              </span>
+              <div className="absolute top-full right-0 pt-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all">
+                <div className="bg-white border border-border shadow-lg rounded-xl p-3 flex flex-col gap-2 min-w-[180px]">
+                  {user ? (
+                    <>
+                      <Link to="/orders" className="text-sm hover:text-primary font-medium px-3 py-2 rounded-md hover:bg-black/5">My Orders</Link>
+                      {isAdmin && (
+                        <Link to="/admin" className="text-sm hover:text-primary font-medium px-3 py-2 rounded-md hover:bg-black/5">Admin Panel</Link>
+                      )}
+                      <button onClick={signOut} className="text-sm text-left text-destructive hover:bg-destructive/10 font-medium px-3 py-2 rounded-md">Logout</button>
+                    </>
+                  ) : (
+                    <Link to="/login" className="text-sm hover:text-primary font-medium px-3 py-2 rounded-md hover:bg-black/5">Login / Register</Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </nav>
 
-          <Link 
-            to="/cart" 
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative py-1 group ${
-              isActive('/cart') ? 'text-white' : 'text-muted-foreground hover:text-white'
-            }`}
-          >
-            <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-amber-500">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+          {/* Right Icons */}
+          <div className="flex items-center gap-5 text-[#333]">
+            <Link to="/search" className="hover:text-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </Link>
+            <Link to={user ? "/orders" : "/login"} className="hover:text-primary transition-colors hidden sm:block">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+            </Link>
+            <Link to="/cart" className="hover:text-primary transition-colors relative">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-2.5 -right-2.5 bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                   {cartCount}
                 </span>
               )}
-            </div>
-            <span>Cart</span>
-            <span className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300 ${
-              isActive('/cart') ? 'w-full' : 'w-0 group-hover:w-full'
-            }`}></span>
-          </Link>
-
-          {user ? (
-            <div className="flex gap-6 items-center">
-              <Link 
-                to="/orders" 
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative py-1 group ${
-                  isActive('/orders') ? 'text-white' : 'text-muted-foreground hover:text-white'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-amber-500">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                </svg>
-                <span>My Orders</span>
-                <span className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300 ${
-                  isActive('/orders') ? 'w-full' : 'w-0 group-hover:w-full'
-                }`}></span>
-              </Link>
-
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className={`flex items-center gap-1.5 text-sm font-semibold transition-all relative py-1 group ${
-                    isActive('/admin') ? 'text-white' : 'text-amber-400 hover:text-amber-300'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
-                  <span>Admin Panel</span>
-                  <span className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300 ${
-                    isActive('/admin') ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`}></span>
-                </Link>
-              )}
-
-              <button 
-                onClick={signOut} 
-                className="flex items-center gap-1.5 text-xs font-bold bg-destructive/10 hover:bg-destructive text-destructive-foreground hover:text-white border border-destructive/30 hover:border-destructive px-4 py-2 rounded-full transition-all duration-300"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                </svg>
-                <span>Logout</span>
-              </button>
-            </div>
-          ) : (
-            <Link 
-              to="/login" 
-              className="flex items-center gap-1.5 text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-6 py-2.5 rounded-full transition-all hover:shadow-[0_0_15px_rgba(245,158,11,0.4)] active:scale-95"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-              </svg>
-              <span>Login</span>
             </Link>
-          )}
-        </nav>
-        <button className="md:hidden text-foreground">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
-      </div>
-    </header>
+            <button className="lg:hidden hover:text-primary transition-colors ml-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </header>
+    </>
   );
 };
 

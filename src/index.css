@@ -1,25 +1,28 @@
 @import "tailwindcss";
+@import "@fontsource/playfair-display";
 
 @theme {
-  --color-background: hsl(222, 20%, 5%);
-  --color-foreground: hsl(0, 0%, 98%);
-  --color-card: hsl(222, 20%, 8%);
-  --color-card-foreground: hsl(0, 0%, 98%);
-  --color-popover: hsl(222, 20%, 8%);
-  --color-popover-foreground: hsl(0, 0%, 98%);
-  --color-primary: hsl(262, 80%, 50%);
-  --color-primary-foreground: hsl(0, 0%, 98%);
-  --color-secondary: hsl(216, 50%, 20%);
-  --color-secondary-foreground: hsl(0, 0%, 98%);
-  --color-muted: hsl(222, 20%, 12%);
-  --color-muted-foreground: hsl(0, 0%, 70%);
-  --color-accent: hsl(262, 80%, 50%);
-  --color-accent-foreground: hsl(0, 0%, 98%);
+  --color-background: hsl(0, 0%, 100%); /* Pure white */
+  --color-foreground: hsl(0, 0%, 20%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-card-foreground: hsl(0, 0%, 20%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popover-foreground: hsl(0, 0%, 20%);
+  /* Deep Red for Primary */
+  --color-primary: hsl(358, 67%, 44%);
+  --color-primary-foreground: hsl(0, 0%, 100%);
+  /* Soft Red for Secondary */
+  --color-secondary: hsl(358, 40%, 90%);
+  --color-secondary-foreground: hsl(358, 67%, 44%);
+  --color-muted: hsl(40, 20%, 93%);
+  --color-muted-foreground: hsl(20, 10%, 40%);
+  --color-accent: hsl(0, 84%, 60%);
+  --color-accent-foreground: hsl(0, 0%, 100%);
   --color-destructive: hsl(0, 84%, 60%);
   --color-destructive-foreground: hsl(0, 0%, 98%);
-  --color-border: hsl(222, 20%, 15%);
-  --color-input: hsl(222, 20%, 15%);
-  --color-ring: hsl(262, 80%, 50%);
+  --color-border: hsl(40, 20%, 85%);
+  --color-input: hsl(40, 20%, 85%);
+  --color-ring: hsl(24, 95%, 53%);
   --radius: 0.5rem;
 
   --animate-blob: blob 7s infinite;
@@ -46,20 +49,24 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, .font-serif {
+    font-family: 'Playfair Display', serif;
   }
 }
 
 @layer utilities {
   .glassmorphism {
-    @apply bg-[rgba(30,30,30,0.4)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+    @apply bg-white border border-[#eaeaea] shadow-sm;
   }
   
   .neon-glow {
-    @apply drop-shadow-[0_0_5px_theme(colors.primary)] drop-shadow-[0_0_10px_theme(colors.primary)];
+    @apply drop-shadow-[0_4px_12px_theme(colors.primary/40)];
   }
   
   .animated-gradient-bg {
-    @apply bg-gradient-to-br from-[theme(colors.primary)] via-[theme(colors.secondary)] to-[theme(colors.accent)] bg-[length:200%_200%] animate-[gradient_shift_15s_ease_infinite];
+    @apply bg-gradient-to-br from-orange-100 via-amber-50 to-orange-50 bg-[length:200%_200%] animate-[gradient_shift_15s_ease_infinite];
   }
   
   @keyframes gradient_shift {

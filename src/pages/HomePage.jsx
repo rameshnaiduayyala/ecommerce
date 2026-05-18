@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import { getFeaturedProducts } from '../api/products';
 import { getStoreSettings } from '../api/admin';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({ hero_image_url: '', hero_use_carousel: false, hero_carousel_urls: '' });
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4500, stopOnInteraction: false })]);
 
   useEffect(() => {
     const fetchProductsAndSettings = async () => {
@@ -32,163 +34,155 @@ const HomePage = () => {
     ? settings.hero_slides 
     : [
         {
-          image_url: 'https://placehold.co/600x600/1E1E1E/8B5CF6?text=Quantum+Macaron',
-          title: 'Quantum Macaron',
-          description: 'Multi-dimensional luxury confectionery prepared with freeze-dried star dust.'
+          image_url: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=1920',
+          title: 'Authentic Sweets',
+          description: 'Experience the rich heritage of Godavari with our pure ghee confections.'
         },
         {
-          image_url: 'https://placehold.co/600x600/1E1E1E/06B6D4?text=Nebula+Truffle',
-          title: 'Nebula Truffle',
-          description: 'Slow-churned dark cocoa layers infused with premium zero-gravity ganache.'
+          image_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=1920',
+          title: 'Premium Quality',
+          description: 'Prepared with utmost hygiene and vacuum sealed to lock in freshness.'
         },
         {
-          image_url: 'https://placehold.co/600x600/1E1E1E/EC4899?text=Supernova+Cake',
-          title: 'Supernova Cake',
-          description: 'Explosive pink raspberry sponge enveloped in a decadent mirror-glaze shield.'
+          image_url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=1920',
+          title: 'Festive Delights',
+          description: 'Celebrate your special moments with our handcrafted traditional treats.'
         }
       ];
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState([]);
+
+  const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
+  const scrollNext = () => emblaApi && emblaApi.scrollNext();
+  const scrollTo = (index) => emblaApi && emblaApi.scrollTo(index);
+
   useEffect(() => {
-    if (!settings.hero_use_carousel || heroSlides.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % heroSlides.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [settings.hero_use_carousel, heroSlides.length]);
+    if (!emblaApi) return;
+    setScrollSnaps(emblaApi.scrollSnapList());
+    const onSelect = () => {
+      setSelectedIndex(emblaApi.selectedScrollSnap());
+    };
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    onSelect();
+  }, [emblaApi]);
 
   return (
-    <div className="flex flex-col gap-24 pb-20">
-      {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-blob mix-blend-screen"></div>
-        <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] animate-blob mix-blend-screen" style={{ animationDelay: '2s' }}></div>
-        
-        <div className="container mx-auto px-4 z-10 flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 flex flex-col gap-6 text-center md:text-left min-h-[350px] justify-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 w-fit mx-auto md:mx-0 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-xs font-medium text-primary">New Cyber Collection Out Now</span>
-            </div>
-
-            {settings.hero_use_carousel ? (
-              <div className="relative min-h-[220px]">
-                {heroSlides.map((slide, index) => {
-                  const titleWords = slide.title ? slide.title.split(' ') : ['Future', 'Sweet'];
-                  const firstWord = titleWords[0];
-                  const remainingWords = titleWords.slice(1).join(' ') || 'Confection';
-
-                  return (
-                    <div 
-                      key={index} 
-                      className={`transition-all duration-1000 transform absolute inset-x-0 top-0 ${
-                        index === activeSlide 
-                          ? 'opacity-100 translate-y-0 z-10' 
-                          : 'opacity-0 translate-y-4 z-0 pointer-events-none'
-                      }`}
-                    >
-                      <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
-                        {firstWord} <br />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500">
-                          {remainingWords}
-                        </span>
-                      </h1>
-                      <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0 mt-4 leading-relaxed">
-                        {slide.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div>
-                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
-                  Taste the <br />
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-pink-500">Future of Sweet</span>
-                </h1>
-                <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0 mt-4 leading-relaxed">
-                  Experience our luxury dessert boutique where culinary art meets cyberpunk aesthetics. Handcrafted confections for the modern connoisseur.
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-6">
-              <Link to="/products" className="px-8 py-4 rounded-full bg-primary text-white font-bold hover:bg-primary/90 transition-all hover:neon-glow hover:-translate-y-1">
-                Explore Menu
-              </Link>
-              <Link to="/categories" className="px-8 py-4 rounded-full glassmorphism font-bold hover:bg-white/5 transition-all hover:-translate-y-1">
-                View Categories
-              </Link>
-            </div>
-          </div>
-          <div className="flex-1 relative w-full max-w-xl aspect-[16/10]">
-             {/* 3D-like Hero Image Container */}
-             <div className="w-full h-full glassmorphism rounded-3xl p-3 border border-white/10 relative overflow-hidden animate-[float_6s_ease-in-out_infinite] flex items-center justify-center shadow-[0_0_50px_rgba(245,158,11,0.15)]">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-3xl z-10 pointer-events-none"></div>
-                
-                {settings.hero_use_carousel && heroSlides.length > 0 ? (
-                  heroSlides.map((slide, index) => (
+    <div className="flex flex-col pb-20">
+      {/* Hero Section - Full width carousel */}
+      <section className="relative w-full h-[600px] md:h-[700px] bg-[#f5f5f5] overflow-hidden group">
+        {settings.hero_use_carousel && heroSlides.length > 0 ? (
+          <>
+            <div className="overflow-hidden h-full" ref={emblaRef}>
+              <div className="flex h-full">
+                {heroSlides.map((slide, index) => (
+                  <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full flex items-center">
                     <img 
-                      key={index} 
                       src={slide.image_url} 
-                      alt={slide.title} 
-                      className={`absolute inset-3 w-[calc(100%-24px)] h-[calc(100%-24px)] object-cover rounded-2xl transition-opacity duration-1000 ${
-                        index === activeSlide ? 'opacity-100 z-0' : 'opacity-0'
-                      }`} 
+                      alt={slide.title}
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
-                  ))
-                ) : (
-                  <img 
-                    src={settings.hero_image_url || "https://placehold.co/600x600/1E1E1E/8B5CF6?text=3D+Dessert"} 
-                    alt="Featured Dessert" 
-                    className="absolute inset-3 w-[calc(100%-24px)] h-[calc(100%-24px)] object-cover rounded-2xl transition-all duration-700" 
-                  />
-                )}
-             </div>
+                    <div className="absolute inset-0 bg-black/40"></div> {/* overlay */}
+                    
+                    <div className="container mx-auto px-4 md:px-8 relative z-20 flex justify-start">
+                      <div className="md:w-[70%] lg:w-[60%] flex flex-col items-start text-left text-white ml-0 md:ml-8 lg:ml-16">
+                        <span className="text-sm font-bold tracking-[0.3em] uppercase mb-4 text-primary bg-white/10 px-4 py-1 rounded-full backdrop-blur-sm border border-white/20">Aha Konaseema Specials</span>
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 drop-shadow-2xl leading-tight">
+                          {slide.title || 'Authentic Sweets'}
+                        </h1>
+                        <p className="text-lg md:text-2xl font-medium mb-10 drop-shadow-xl text-white/90">
+                          {slide.description || 'Experience the rich heritage of Godavari with our pure ghee confections.'}
+                        </p>
+                        <Link to="/products" className="bg-primary hover:bg-black text-white font-bold py-4 px-10 rounded-full transition-all duration-300 uppercase tracking-widest text-sm shadow-xl hover:-translate-y-1">
+                          Explore Collection
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Carousel Navigation Arrows */}
+            <button onClick={scrollPrev} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white text-white hover:text-black rounded-full flex items-center justify-center backdrop-blur-md border border-white/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            </button>
+            <button onClick={scrollNext} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white text-white hover:text-black rounded-full flex items-center justify-center backdrop-blur-md border border-white/30 transition-all duration-300 opacity-0 group-hover:opacity-100 z-30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+            </button>
+
+            {/* Carousel Dots */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+              {scrollSnaps.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollTo(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    index === selectedIndex 
+                      ? 'w-10 h-2 bg-primary' 
+                      : 'w-2 h-2 bg-white/50 hover:bg-white/80'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img 
+              src={settings.hero_image_url || "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=1920"} 
+              alt="Hero"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40"></div>
+            <div className="container mx-auto px-4 md:px-8 relative z-20 flex justify-start">
+              <div className="md:w-[70%] lg:w-[60%] flex flex-col items-start text-left text-white ml-0 md:ml-8 lg:ml-16">
+                <span className="text-sm font-bold tracking-[0.3em] uppercase mb-4 text-primary bg-white/10 px-4 py-1 rounded-full backdrop-blur-sm border border-white/20">Aha Konaseema Specials</span>
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 drop-shadow-2xl leading-tight">
+                  Authentic <br />Godavari Sweets
+                </h1>
+                <p className="text-lg md:text-2xl font-medium mb-10 drop-shadow-xl text-white/90">
+                  Experience the rich heritage of Konaseema with our premium confections made from pure organic cow ghee.
+                </p>
+                <Link to="/products" className="bg-primary hover:bg-black text-white font-bold py-4 px-10 rounded-full transition-all duration-300 uppercase tracking-widest text-sm shadow-xl hover:-translate-y-1">
+                  Explore Collection
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* Featured Products */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Featured Delights</h2>
-            <p className="text-muted-foreground">Our most sought-after quantum confections.</p>
-          </div>
-          <Link to="/products" className="hidden md:flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium">
-            View all <span className="text-xl">→</span>
-          </Link>
+      <section className="container mx-auto px-4 md:px-8 mt-24 mb-16">
+        <div className="flex flex-col items-center mb-12 text-center">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#333] mb-4 relative inline-block">
+            Our Best Sellers
+            {/* Floral/Leaf Accent (Placeholder) */}
+            <svg className="absolute -top-6 -right-8 w-8 h-8 text-primary opacity-50" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" opacity=".3"/><path d="M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-4h-2.1c-.46-2.28-2.48-4-4.9-4s-4.44 1.72-4.9 4H4v2h2v10h12V9h2V7z"/></svg>
+          </h2>
+          <p className="text-muted-foreground max-w-2xl">Discover our most loved and cherished Godavari traditional delicacies, crafted with absolute purity and love.</p>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-[420px] glassmorphism rounded-2xl animate-pulse"></div>
+              <div key={i} className="h-[420px] bg-black/5 rounded-3xl animate-pulse"></div>
             ))
           ) : products.length > 0 ? (
             products.map(product => (
               <ProductCard key={product.id} product={product} />
             ))
           ) : (
-            <p className="text-muted-foreground col-span-full">No featured products found in the database.</p>
+            <p className="text-muted-foreground col-span-full text-center">No featured products found in the database.</p>
           )}
         </div>
-      </section>
-
-      {/* Newsletter / CTA */}
-      <section className="container mx-auto px-4">
-        <div className="glassmorphism rounded-3xl p-10 md:p-20 text-center relative overflow-hidden border border-primary/20">
-          <div className="absolute inset-0 animated-gradient-bg opacity-10"></div>
-          <div className="relative z-10 max-w-2xl mx-auto flex flex-col gap-6">
-            <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600">Join Aha Konaseema</h2>
-            <p className="text-muted-foreground text-lg">Subscribe for exclusive access to traditional Indian recipe drops and festival sweets specials.</p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <input type="email" placeholder="Enter your email" className="flex-1 bg-background/50 border border-white/10 rounded-full px-6 py-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all backdrop-blur-md" />
-              <button className="bg-primary text-white font-bold rounded-full px-8 py-4 hover:bg-primary/90 transition-all hover:neon-glow whitespace-nowrap">
-                Subscribe
-              </button>
-            </div>
-          </div>
+        
+        <div className="flex justify-center mt-12">
+          <Link to="/products" className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold py-3 px-10 rounded-full transition-all uppercase tracking-widest text-xs">
+            View All Products
+          </Link>
         </div>
       </section>
     </div>

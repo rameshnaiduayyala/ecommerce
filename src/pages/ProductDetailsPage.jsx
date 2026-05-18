@@ -91,7 +91,7 @@ const ProductDetailsPage = () => {
       <div className="container mx-auto px-4 py-24 text-center">
         <h2 className="text-3xl font-bold mb-4">Confection Not Found</h2>
         <p className="text-muted-foreground mb-8">The requested item has drifted out of this orbit.</p>
-        <Link to="/products" className="bg-primary text-white font-bold px-8 py-4 rounded-full hover:bg-primary/90 transition-all">
+        <Link to="/products" className="bg-primary text-foreground font-bold px-8 py-4 rounded-full hover:bg-primary/90 transition-all">
           Back to Menu
         </Link>
       </div>
@@ -106,7 +106,7 @@ const ProductDetailsPage = () => {
     <div className="container mx-auto px-4 py-12 animate-fade-in">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 bg-primary border border-primary/30 text-white font-semibold px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.3)] animate-bounce text-sm">
+        <div className="fixed bottom-8 right-8 z-50 bg-primary border border-primary/30 text-foreground font-semibold px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.3)] animate-bounce text-sm">
           ✨ {toastMessage}
         </div>
       )}
@@ -130,7 +130,7 @@ const ProductDetailsPage = () => {
             className="relative z-10 max-h-[85%] max-w-[85%] object-contain rounded-2xl drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)] transform group-hover:scale-105 transition-transform duration-500"
           />
           {product.discount_price && (
-            <span className="absolute top-6 right-6 z-20 bg-destructive text-white text-xs font-black px-3 py-1.5 rounded-full tracking-wide shadow-lg">
+            <span className="absolute top-6 right-6 z-20 bg-destructive text-foreground text-xs font-black px-3 py-1.5 rounded-full tracking-wide shadow-lg">
               {discountPercent}% OFF
             </span>
           )}
@@ -154,29 +154,29 @@ const ProductDetailsPage = () => {
             
             <div className="flex items-baseline gap-4 mt-2">
               <span className="text-3xl font-black text-foreground font-mono">
-                ₹{product.discount_price || product.price}
+                ₹{Number(product.discount_price || product.price).toFixed(2)}
               </span>
               {product.discount_price && (
                 <span className="text-lg text-muted-foreground line-through font-mono">
-                  ₹{product.price}
+                  ₹{Number(product.price).toFixed(2)}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Glowing Admin Custom Badges / Notes */}
+          {/* Admin Custom Badges / Notes */}
           {product.admin_note && (
-            <div className="border border-primary/30 bg-primary/5 rounded-2xl p-4 flex gap-3 items-center shadow-[inset_0_0_15px_rgba(139,92,246,0.05)]">
-              <span className="text-2xl">⚡</span>
+            <div className="border border-[#eaeaea] bg-amber-50/50 rounded-2xl p-5 flex gap-4 items-start shadow-sm mt-2">
+              <span className="text-2xl mt-1">✨</span>
               <div>
-                <h4 className="text-xs uppercase tracking-wider font-extrabold text-primary">Chef's Update Note</h4>
-                <p className="text-sm text-foreground/90 mt-0.5">{product.admin_note}</p>
+                <h4 className="text-xs uppercase tracking-wider font-black text-primary mb-1">A Note from Our Kitchen</h4>
+                <p className="text-sm text-[#555] italic leading-relaxed font-serif">{product.admin_note}</p>
               </div>
             </div>
           )}
 
           {/* Description */}
-          <div className="border-y border-white/10 py-6 my-2">
+          <div className="border-y border-border py-6 my-2">
             <h4 className="text-sm uppercase tracking-wider font-bold text-muted-foreground mb-3">Confection Description</h4>
             <p className="text-foreground/80 leading-relaxed text-sm lg:text-base">
               {product.description || 'A gourmet sci-fi confectionery dessert, beautifully prepared in our high-end zero-gravity kitchen using locally-sourced prime ingredients for premium, unforgettable layers of delicate sweet pleasure.'}
@@ -186,17 +186,17 @@ const ProductDetailsPage = () => {
           {/* Purchasing Actions */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-2">
             {/* Quantity Selector */}
-            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 gap-6 sm:w-fit">
+            <div className="flex items-center justify-between bg-black/5 border border-border rounded-xl px-4 py-3 gap-6 sm:w-fit">
               <button 
                 onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                className="text-muted-foreground hover:text-white font-bold text-lg w-5 h-5 flex items-center justify-center transition-all"
+                className="text-muted-foreground hover:text-foreground font-bold text-lg w-5 h-5 flex items-center justify-center transition-all"
               >
                 -
               </button>
               <span className="font-mono font-bold text-base min-w-[20px] text-center">{quantity}</span>
               <button 
                 onClick={() => setQuantity(prev => prev + 1)}
-                className="text-muted-foreground hover:text-white font-bold text-lg w-5 h-5 flex items-center justify-center transition-all"
+                className="text-muted-foreground hover:text-foreground font-bold text-lg w-5 h-5 flex items-center justify-center transition-all"
               >
                 +
               </button>
@@ -205,7 +205,7 @@ const ProductDetailsPage = () => {
             {/* Add to Cart CTA */}
             <button 
               onClick={handleAddToCartClick}
-              className="flex-1 bg-primary text-white font-bold py-4 px-8 rounded-xl hover:bg-primary/95 hover:neon-glow transition-all flex items-center justify-center gap-3 shadow-lg hover:scale-[1.01]"
+              className="flex-1 bg-primary text-foreground font-bold py-4 px-8 rounded-xl hover:bg-primary/95 hover:neon-glow transition-all flex items-center justify-center gap-3 shadow-lg hover:scale-[1.01]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
@@ -219,7 +219,7 @@ const ProductDetailsPage = () => {
               className={`p-4 rounded-xl border transition-all flex items-center justify-center ${
                 isWishlisted 
                   ? 'bg-destructive/10 border-destructive text-destructive shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
-                  : 'bg-white/5 border-white/10 hover:border-white/20 text-muted-foreground hover:text-white'
+                  : 'bg-black/5 border-border hover:border-border text-muted-foreground hover:text-foreground'
               }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -232,7 +232,7 @@ const ProductDetailsPage = () => {
 
       {/* Related Products Section */}
       {relatedProducts.length > 0 && (
-        <div className="border-t border-white/10 pt-16">
+        <div className="border-t border-border pt-16">
           <h2 className="text-2xl font-black mb-8 text-foreground tracking-tight">You May Also Relish</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map(p => (
@@ -240,7 +240,7 @@ const ProductDetailsPage = () => {
                 key={p.id} 
                 className="group glassmorphism rounded-2xl overflow-hidden hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]"
               >
-                <Link to={`/products/${p.id}`} className="aspect-square bg-white/5 p-4 flex items-center justify-center block relative overflow-hidden">
+                <Link to={`/products/${p.id}`} className="aspect-[4/3] bg-black/5 p-4 flex items-center justify-center block relative overflow-hidden">
                   <div className="w-2/3 h-2/3 rounded-full bg-gradient-to-tr from-primary/30 to-accent/30 blur-2xl absolute opacity-30 group-hover:opacity-60 transition-opacity"></div>
                   <img src={p.image_url} alt={p.name} className="relative z-10 w-full h-full object-cover rounded-xl transform group-hover:scale-105 transition-transform" />
                 </Link>
@@ -249,7 +249,7 @@ const ProductDetailsPage = () => {
                     <h3 className="font-bold text-sm text-foreground truncate hover:text-primary transition-colors">{p.name}</h3>
                   </Link>
                   <p className="text-xs text-muted-foreground line-clamp-1">{p.description}</p>
-                  <span className="text-sm font-bold text-primary font-mono mt-2">₹{p.discount_price || p.price}</span>
+                  <span className="text-sm font-bold text-primary font-mono mt-2">₹{Number(p.discount_price || p.price).toFixed(2)}</span>
                 </div>
               </div>
             ))}

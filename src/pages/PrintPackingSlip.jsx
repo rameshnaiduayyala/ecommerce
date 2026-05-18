@@ -65,7 +65,7 @@ const PrintPackingSlip = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="font-mono text-sm tracking-widest text-amber-500 font-bold uppercase animate-pulse">
           Generating Fulfillment Docket...
@@ -76,12 +76,12 @@ const PrintPackingSlip = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4 p-4 text-center">
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4 p-4 text-center">
         <h2 className="text-2xl font-black text-destructive">Fulfillment Order Not Found</h2>
         <p className="text-muted-foreground text-sm max-w-md">Verify the order reference ID or return back to the administrative control panel.</p>
         <button 
           onClick={() => window.close()} 
-          className="bg-white/10 hover:bg-white/20 border border-white/10 px-6 py-2.5 rounded-full text-xs font-bold transition-all text-white mt-2"
+          className="bg-black/5 hover:bg-black/10 border border-border px-6 py-2.5 rounded-full text-xs font-bold transition-all text-foreground mt-2"
         >
           Close Print View
         </button>
@@ -100,7 +100,7 @@ const PrintPackingSlip = () => {
   return (
     <div className="min-h-screen bg-white text-black p-8 font-sans antialiased">
       {/* Floating Action Controls (Hidden on Print) */}
-      <div className="max-w-3xl mx-auto mb-8 bg-neutral-900 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg border border-neutral-800 print:hidden">
+      <div className="max-w-3xl mx-auto mb-8 bg-neutral-900 text-foreground rounded-2xl p-4 flex justify-between items-center shadow-lg border border-neutral-800 print:hidden">
         <div className="flex flex-col">
           <span className="text-xs font-bold text-amber-500 uppercase tracking-widest font-mono">Fulfillment Mode</span>
           <span className="text-sm font-black">Isolated Printing Environment</span>
@@ -114,7 +114,7 @@ const PrintPackingSlip = () => {
           </button>
           <button 
             onClick={() => window.close()}
-            className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-neutral-700 transition-all"
+            className="bg-neutral-800 hover:bg-neutral-700 text-foreground font-bold text-xs px-5 py-2.5 rounded-xl border border-neutral-700 transition-all"
           >
             Close Tab
           </button>

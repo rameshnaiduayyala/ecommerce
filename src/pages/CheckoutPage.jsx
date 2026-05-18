@@ -183,7 +183,7 @@ const CheckoutPage = () => {
       <div className="container mx-auto px-4 py-20 text-center">
         <h2 className="text-3xl font-bold mb-4">Checkout Error</h2>
         <p className="text-muted-foreground mb-8">Your cart is empty. Please add items before checking out.</p>
-        <button onClick={() => navigate('/products')} className="bg-primary px-8 py-3 rounded-full font-bold text-white">Go to Products</button>
+        <button onClick={() => navigate('/products')} className="bg-primary px-8 py-3 rounded-full font-bold text-foreground">Go to Products</button>
       </div>
     );
   }
@@ -201,23 +201,23 @@ const CheckoutPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">First Name</label>
-                  <input required name="firstName" value={formData.firstName} onChange={handleChange} className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
+                  <input required name="firstName" value={formData.firstName} onChange={handleChange} className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">Last Name</label>
-                  <input required name="lastName" value={formData.lastName} onChange={handleChange} className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
+                  <input required name="lastName" value={formData.lastName} onChange={handleChange} className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
                 </div>
                 <div className="col-span-2 flex flex-col gap-2 mt-2">
                   <label className="text-sm text-muted-foreground">Street Address</label>
-                  <input required name="address" value={formData.address} onChange={handleChange} className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
+                  <input required name="address" value={formData.address} onChange={handleChange} className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
                   <label className="text-sm text-muted-foreground">City</label>
-                  <input required name="city" value={formData.city} onChange={handleChange} className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
+                  <input required name="city" value={formData.city} onChange={handleChange} className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
                   <label className="text-sm text-muted-foreground">Postal Code</label>
-                  <input required name="postalCode" value={formData.postalCode} onChange={handleChange} className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
+                  <input required name="postalCode" value={formData.postalCode} onChange={handleChange} className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:border-primary focus:outline-none transition-colors" />
                 </div>
               </div>
             </div>
@@ -227,20 +227,20 @@ const CheckoutPage = () => {
               <h2 className="text-2xl font-bold mb-6 relative z-10">Payment Method</h2>
               
               <div className="flex flex-col gap-4 relative z-10 mb-8">
-                <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'full' ? 'border-primary bg-primary/10' : 'border-white/10 bg-background/50'}`}>
+                <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'full' ? 'border-primary bg-primary/10' : 'border-border bg-background/80'}`}>
                   <input type="radio" name="paymentMethod" value="full" checked={paymentMethod === 'full'} onChange={(e) => setPaymentMethod(e.target.value)} className="accent-primary w-5 h-5" />
                   <span className="font-bold">Pay in Full (Credit Card)</span>
                 </label>
                 
                 {settings.cod_enabled && (
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-primary bg-primary/10' : 'border-white/10 bg-background/50'}`}>
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-primary bg-primary/10' : 'border-border bg-background/80'}`}>
                     <input type="radio" name="paymentMethod" value="cod" checked={paymentMethod === 'cod'} onChange={(e) => setPaymentMethod(e.target.value)} className="accent-primary w-5 h-5" />
                     <span className="font-bold">Cash on Delivery (COD)</span>
                   </label>
                 )}
 
                 {settings.partial_payment_enabled && (
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'partial' ? 'border-primary bg-primary/10' : 'border-white/10 bg-background/50'}`}>
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'partial' ? 'border-primary bg-primary/10' : 'border-border bg-background/80'}`}>
                     <input type="radio" name="paymentMethod" value="partial" checked={paymentMethod === 'partial'} onChange={(e) => setPaymentMethod(e.target.value)} className="accent-primary w-5 h-5" />
                     <span className="font-bold">Pay {settings.partial_payment_percent}% Upfront</span>
                   </label>
@@ -251,23 +251,23 @@ const CheckoutPage = () => {
                 <div className="flex flex-col gap-4 relative z-10">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">Card Number</label>
-                    <input required name="cardNumber" value={formData.cardNumber} onChange={handleChange} placeholder="0000 0000 0000 0000" className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
+                    <input required name="cardNumber" value={formData.cardNumber} onChange={handleChange} placeholder="0000 0000 0000 0000" className="bg-background/80 border border-border rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-sm text-muted-foreground">Expiry Date</label>
-                      <input required name="expiry" value={formData.expiry} onChange={handleChange} placeholder="MM/YY" className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
+                      <input required name="expiry" value={formData.expiry} onChange={handleChange} placeholder="MM/YY" className="bg-background/80 border border-border rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-sm text-muted-foreground">CVC</label>
-                      <input required name="cvc" value={formData.cvc} onChange={handleChange} placeholder="123" type="password" maxLength="4" className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
+                      <input required name="cvc" value={formData.cvc} onChange={handleChange} placeholder="123" type="password" maxLength="4" className="bg-background/80 border border-border rounded-xl px-4 py-3 font-mono focus:border-primary focus:outline-none transition-colors" />
                     </div>
                   </div>
                 </div>
               )}
             </div>
             
-            <button type="submit" disabled={isProcessing} className="w-full bg-primary text-white font-bold py-5 rounded-xl hover:bg-primary/90 hover:neon-glow transition-all text-lg disabled:opacity-50">
+            <button type="submit" disabled={isProcessing} className="w-full bg-primary text-foreground font-bold py-5 rounded-xl hover:bg-primary/90 hover:neon-glow transition-all text-lg disabled:opacity-50">
               {isProcessing ? 'Processing...' : `Place Order`}
             </button>
           </form>
@@ -275,15 +275,15 @@ const CheckoutPage = () => {
         
         {/* Order Summary */}
         <div className="w-full lg:w-96">
-          <div className="glassmorphism p-8 rounded-3xl sticky top-28 border border-white/10">
+          <div className="glassmorphism p-8 rounded-3xl sticky top-28 border border-border">
             <h3 className="text-xl font-bold mb-6">Order Summary</h3>
             <div className="flex flex-col gap-4 mb-6 max-h-64 overflow-y-auto pr-2">
               {cartItems.map(item => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <div className="flex gap-3">
                     <div className="relative">
-                      <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-white/10" />
-                      <span className="absolute -top-2 -right-2 bg-muted text-xs w-5 h-5 flex items-center justify-center rounded-full border border-white/20">{item.quantity}</span>
+                      <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-border" />
+                      <span className="absolute -top-2 -right-2 bg-muted text-xs w-5 h-5 flex items-center justify-center rounded-full border border-border">{item.quantity}</span>
                     </div>
                     <span className="text-muted-foreground flex items-center">{item.name}</span>
                   </div>
@@ -299,14 +299,14 @@ const CheckoutPage = () => {
                 placeholder="PROMO CODE" 
                 value={couponCode} 
                 onChange={(e) => setCouponCode(e.target.value)} 
-                className="bg-background/80 border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-primary focus:outline-none flex-1 uppercase font-mono font-bold"
+                className="bg-background/80 border border-border rounded-xl px-4 py-3 text-xs focus:border-primary focus:outline-none flex-1 uppercase font-mono font-bold"
               />
-              <button type="submit" className="bg-primary hover:bg-primary/95 text-white font-bold text-xs px-4 py-3 rounded-xl transition-all">Apply</button>
+              <button type="submit" className="bg-primary hover:bg-primary/95 text-foreground font-bold text-xs px-4 py-3 rounded-xl transition-all">Apply</button>
             </form>
             {couponError && <p className="text-destructive text-[11px] mb-4 font-semibold">{couponError}</p>}
             {couponSuccess && <p className="text-green-400 text-[11px] mb-4 font-semibold">{couponSuccess}</p>}
 
-            <div className="border-t border-white/10 pt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+            <div className="border-t border-border pt-4 flex flex-col gap-2 text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>₹{cartTotal.toFixed(2)}</span>
@@ -330,7 +330,7 @@ const CheckoutPage = () => {
               )}
             </div>
             
-            <div className="border-t border-white/10 pt-4 mt-4 flex justify-between text-xl font-bold">
+            <div className="border-t border-border pt-4 mt-4 flex justify-between text-xl font-bold">
               <span>{paymentMethod === 'cod' ? 'Total (Due at Delivery)' : paymentMethod === 'partial' ? 'Due Today' : 'Total'}</span>
               <span className="text-primary">
                 ₹{paymentMethod === 'partial' 

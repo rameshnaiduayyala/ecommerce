@@ -51,7 +51,7 @@ const ProductsPage = () => {
           <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="glassmorphism px-4 py-2 rounded-full focus:outline-none text-sm bg-background cursor-pointer text-foreground border border-white/10"
+            className="glassmorphism px-4 py-2 rounded-full focus:outline-none text-sm bg-background cursor-pointer text-foreground border border-border"
           >
             <option value="All Categories">All Categories</option>
             <option value="Macarons">Macarons</option>
@@ -72,7 +72,7 @@ const ProductsPage = () => {
             <ProductCard key={product.id} product={product} />
           ))
         ) : (
-          <p className="text-muted-foreground col-span-full text-center py-20 bg-white/5 rounded-2xl border border-white/5">
+          <p className="text-muted-foreground col-span-full text-center py-20 bg-black/5 rounded-2xl border border-white/5">
             No products found matching your search.
           </p>
         )}

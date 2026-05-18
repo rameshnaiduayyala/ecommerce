@@ -63,7 +63,7 @@ const LoginPage = () => {
               type="email" 
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+              className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
               required
             />
           </div>
@@ -73,7 +73,7 @@ const LoginPage = () => {
               type="password" 
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+              className="bg-background/80 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
               required
             />
           </div>
@@ -81,7 +81,7 @@ const LoginPage = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="mt-4 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all hover:neon-glow disabled:opacity-50"
+            className="mt-4 bg-primary hover:bg-primary/90 text-foreground font-bold py-3 rounded-xl transition-all hover:neon-glow disabled:opacity-50"
           >
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </button>
