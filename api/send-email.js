@@ -1,7 +1,16 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Vercel Serverless Function to handle email sending securely on the backend
-const resend = new Resend(process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY);
+// Create a transporter using your cPanel SMTP credentials
+// In Vercel, you'll need to set these environment variables
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports (like 587)
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export default async function handler(req, res) {
   // Set CORS headers for security and to allow the frontend to call this endpoint
@@ -26,22 +35,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields: to, subject, or html' });
     }
 
-    // In testing (before domain verification), Resend requires sending from onboarding@resend.dev
-    const { data, error } = await resend.emails.send({
-      from: 'SweetVerse Test <onboarding@resend.dev>', 
-      to: [to], // Must be your verified email (e.g. techrammy@gmail.com)
-      subject: subject,
-      html: html,
+    // Verify SMTP connection configuration (optional but helpful for debugging)
+    // await transporter.verify();
+
+    const info = await transporter.sendMail({
+      from: `"Aha Konaseema" <${process.env.SMTP_USER}>`, // Sender address
+      to: to, // List of receivers
+      subject: subject, // Subject line
+      html: html, // HTML body content
     });
 
-    if (error) {
-      console.error('Resend API Error:', error);
-      return res.status(400).json({ error });
-    }
-
-    return res.status(200).json({ data });
+    return res.status(200).json({ success: true, messageId: info.messageId });
   } catch (error) {
-    console.error('Server error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('SMTP error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to send email via SMTP' });
   }
 }
