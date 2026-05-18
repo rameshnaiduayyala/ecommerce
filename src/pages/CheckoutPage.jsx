@@ -138,13 +138,29 @@ const CheckoutPage = () => {
       // 3. Send Emails (Non-blocking: we catch errors so checkout succeeds even if email fails)
       try {
         console.log("Sending transactional emails...");
-        const origin = window.location.origin;
-        // Send receipt to customer with invoice details
-        await EmailTemplates.sendOrderConfirmation(user.email, orderData.id, finalAmount, cartItems, origin);
         
-        // Send alert to admin using dynamic support email from settings
+        // Build the full order details payload for the Amazon-style email
+        const orderDetails = {
+          orderId: orderData.id,
+          date: orderData.created_at || new Date().toISOString(),
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          shippingAddress: `${formData.address}, ${formData.city}, ${formData.postalCode}, ${formData.country}`,
+          phone: formData.phone || '',
+          items: cartItems,
+          subtotal: cartTotal,
+          discount: discount,
+          shipping: shipping,
+          grandTotal: finalAmount,
+          paymentMethod: paymentMethod === 'full' ? 'Prepaid (Full)' : paymentMethod === 'cod' ? 'Cash on Delivery' : 'Partial Payment',
+          origin: window.location.origin
+        };
+
+        // Send full receipt to customer
+        await EmailTemplates.sendOrderConfirmation(user.email, orderDetails);
+        
+        // Send full alert to admin using dynamic support email from settings
         const adminEmail = settings.support_email || 'admin@rameshayyala.online'; 
-        await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderData.id, finalAmount);
+        await EmailTemplates.sendAdminNewOrderAlert(adminEmail, orderDetails);
         console.log("Transactional emails sent successfully");
       } catch (emailErr) {
         console.warn("Failed to send transactional emails (likely due to Resend domain verification limits during testing). Order still placed successfully.", emailErr);
