@@ -19,8 +19,15 @@ import PrintInvoice from './pages/PrintInvoice';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import TestNotificationsPage from './pages/TestNotificationsPage';
+import { initOneSignal } from './notifications/onesignal';
+import { useEffect } from 'react';
 
 function App() {
+  useEffect(() => {
+    initOneSignal();
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>
@@ -47,6 +54,7 @@ function App() {
                   <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
                   <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
                   <Route path="/search" element={<SearchResultsPage />} />
+                  <Route path="/test-notifications" element={<TestNotificationsPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </MainLayout>
